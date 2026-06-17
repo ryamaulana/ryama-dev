@@ -1,26 +1,231 @@
 @import "tailwindcss";
 
+/* ============================================================
+   DESIGN SYSTEM — ryama.dev
+   Style: Motion-Driven | Palette: Monochrome + Coral Accent
+   Fonts: Playfair Display (heading serif) + Space Grotesk (body)
+   ============================================================ */
+
+@theme {
+  /* --- Colors --- */
+  --color-bg: #fafaf7;
+  /* Warm off-white */
+  --color-text: #1a1a1a;
+  /* Near-black */
+  --color-text-muted: #6b6b6b;
+  /* Secondary text */
+  --color-accent: #ff5a36;
+  /* Coral — single accent */
+  --color-accent-light: #fff0ed;
+  /* Accent tint for subtle bgs */
+  --color-border: #e5e4e0;
+  /* Warm neutral border */
+  --color-surface: #ffffff;
+  /* Card surface */
+
+  /* --- Fonts (set by next/font CSS vars in layout) --- */
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair-display), ui-serif, Georgia, serif;
+
+  /* --- Spacing --- */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --header-pt: 40px;
+  --header-pb: 24px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --header-pt: 56px;
+    --header-pb: 32px;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-playfair-display), Georgia, serif;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   TYPOGRAPHY UTILITIES
+   ============================================================ */
+.font-serif {
+  font-family: var(--font-playfair-display), Georgia, serif;
+}
+
+.font-sans {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+/* ============================================================
+   SCROLLBAR HIDE
+   ============================================================ */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ============================================================
+   SCROLL SNAP
+   ============================================================ */
+.snap-y-mandatory {
+  scroll-snap-type: y mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* ============================================================
+   SCROLL CTA — plain text link with animated underline + arrow
+   ============================================================ */
+.scroll-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-inter);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--color-text);
+  text-decoration: none;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  transition: color 0.5s ease;
+}
+
+.scroll-cta:hover {
+  color: var(--color-accent);
+}
+
+.scroll-cta::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--color-accent);
+  transition: width 0.3s ease, background-color 0.5s ease;
+}
+
+.scroll-cta:hover::after {
+  width: 100%;
+}
+
+.scroll-cta .cta-arrow {
+  transition: transform 0.25s ease, color 0.5s ease;
+  color: var(--color-accent);
+}
+
+.scroll-cta:hover .cta-arrow {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   REDUCED MOTION — respect user preference
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   SELECTION COLOR
+   ============================================================ */
+::selection {
+  background-color: var(--color-accent);
+  color: #ffffff;
+}
+
+/* ============================================================
+   FOCUS VISIBLE — keyboard accessibility
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   PROJECT MOCKUP PERSPECTIVE & TRANSFORMS
+   ============================================================ */
+.card-3d-wrapper {
+  transform: rotateX(12deg) rotateY(-26deg) rotateZ(5deg) skewX(-4deg);
+}
+
+/* ============================================================
+   ABOUT PAGE GRID BACKGROUND
+   ============================================================ */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
+  background-size: 80px 80px;
+  background-position: center center;
 }
