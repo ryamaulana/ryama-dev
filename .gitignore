@@ -43,5 +43,5 @@ next-env.d.ts
 /data
 .agent
 .claude
-*.webm
-*.mp4
+# *.webm
+# *.mp4
