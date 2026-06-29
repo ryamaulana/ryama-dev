@@ -12,13 +12,13 @@ interface ProjectImageStripProps {
 
 const GAP_PX = 24;
 
-interface VideoPlayerProps {
+export interface VideoPlayerProps {
   src: string;
   isActive: boolean;
   poster?: string;
 }
 
-function VideoPlayer({ src, isActive, poster }: VideoPlayerProps) {
+export function VideoPlayer({ src, isActive, poster }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {

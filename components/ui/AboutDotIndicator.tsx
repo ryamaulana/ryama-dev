@@ -25,7 +25,7 @@ export function AboutDotIndicator({ activeIndex, onNavigate }: AboutDotIndicator
 
   return (
     <div
-      className="fixed right-12 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3.5 items-end pointer-events-auto"
+      className="about-dot-indicator fixed right-12 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3.5 items-end pointer-events-auto portrait:right-auto portrait:left-1/2 portrait:bottom-8 portrait:top-auto portrait:-translate-x-1/2 portrait:translate-y-0 portrait:flex-row portrait:gap-4 portrait:items-center"
       onMouseEnter={() => setOverlayOpen(true)}
       onMouseLeave={() => {
         setOverlayOpen(false);
@@ -45,7 +45,7 @@ export function AboutDotIndicator({ activeIndex, onNavigate }: AboutDotIndicator
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 8 }}
                 transition={{ duration: 0.18, delay: i * 0.04 }}
-                className="font-sans text-right whitespace-nowrap select-none font-semibold text-[10px] tracking-[0.2em] uppercase"
+                className="about-dot-indicator-label font-sans text-right whitespace-nowrap select-none font-semibold text-[10px] tracking-[0.2em] uppercase portrait:hidden"
                 style={{
                   color:
                     i === activeIndex
@@ -71,8 +71,7 @@ export function AboutDotIndicator({ activeIndex, onNavigate }: AboutDotIndicator
             onClick={() => onNavigate?.(i)}
             onMouseEnter={() => setHoveredIndex(i)}
             onMouseLeave={() => setHoveredIndex(null)}
-            className="relative flex items-center justify-center cursor-pointer border-none bg-transparent p-0"
-            style={{ width: 24, height: 24 }}
+            className="relative flex items-center justify-center cursor-pointer border-none bg-transparent p-0 w-6 h-6 portrait:w-11 portrait:h-11"
           >
             <motion.div
               className="rounded-full"

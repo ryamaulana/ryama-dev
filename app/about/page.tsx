@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -87,41 +87,91 @@ export default function AboutPage() {
       const container = containerRef.current;
       if (!container) return;
 
-      const sections = gsap.utils.toArray<HTMLElement>(".about-section-wrapper");
+      const mm = gsap.matchMedia();
 
-      sections.forEach((section, i) => {
-        ScrollTrigger.create({
-          trigger: section,
-          scroller: container, // Sync with scroll-snap custom container
-          start: "top 50%",
-          end: "bottom 50%",
-          id: `about-trigger-${i}`,
-          onEnter: () => setActiveIndex(i),
-          onEnterBack: () => setActiveIndex(i),
+      mm.add("(orientation: landscape)", () => {
+        const sections = gsap.utils.toArray<HTMLElement>(".about-section-wrapper");
+
+        sections.forEach((section, i) => {
+          ScrollTrigger.create({
+            trigger: section,
+            scroller: container, // Sync with scroll-snap custom container
+            start: "top 50%",
+            end: "bottom 50%",
+            id: `about-trigger-landscape-${i}`,
+            onEnter: () => setActiveIndex(i),
+            onEnterBack: () => setActiveIndex(i),
+          });
         });
       });
 
-      return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+      mm.add("(orientation: portrait)", () => {
+        const sections = gsap.utils.toArray<HTMLElement>(".about-section-wrapper");
+
+        sections.forEach((section, i) => {
+          ScrollTrigger.create({
+            trigger: section,
+            start: "top 50%",
+            end: "bottom 50%",
+            id: `about-trigger-portrait-${i}`,
+            onEnter: () => setActiveIndex(i),
+            onEnterBack: () => setActiveIndex(i),
+          });
+        });
+      });
+
+      return () => {
+        mm.revert();
+      };
     },
     { scope: containerRef }
   );
 
+  useEffect(() => {
+    // Refresh ScrollTrigger after a short delay on initial mount to allow layout settling
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+
+    const handleOrientationChange = () => {
+      setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 300);
+    };
+
+    window.addEventListener("orientationchange", handleOrientationChange);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+    };
+  }, []);
+
   const scrollToSection = (idx: number) => {
     const el = document.getElementById(`about-section-${idx}`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+      const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+      if (isPortrait) {
+        // Scroll the window/body on portrait
+        window.scrollTo({
+          top: el.offsetTop,
+          behavior: "smooth"
+        });
+      } else {
+        // Scroll the custom container on landscape
+        el.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
   return (
     <div
       ref={containerRef}
-      className="w-full h-screen overflow-y-scroll snap-y snap-mandatory bg-[#FAFAF7] bg-grid-pattern relative scroll-smooth hide-scrollbar"
+      className="about-page-container w-full h-screen portrait:h-auto overflow-y-scroll portrait:overflow-y-visible snap-y snap-mandatory portrait:snap-none bg-[#FAFAF7] bg-grid-pattern relative scroll-smooth hide-scrollbar"
     >
       {/* ── Slide 1: Intro ── */}
       <section
         id="about-section-0"
-        className="about-section-wrapper snap-start w-full h-screen flex flex-col justify-center items-center px-12 sm:px-24 text-center select-none"
+        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex flex-col justify-center items-center px-8 sm:px-24 text-center select-none"
       >
         <div className="max-w-2xl flex flex-col items-center gap-6">
           <p className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-stone-400 font-sans font-medium">
@@ -158,7 +208,7 @@ export default function AboutPage() {
       {/* ── Slide 2: Who I Am ── */}
       <section
         id="about-section-1"
-        className="about-section-wrapper snap-start w-full h-screen flex items-center justify-center px-12 sm:px-24 lg:px-32"
+        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
       >
         <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           {/* Left Side: Bio text */}
@@ -185,10 +235,9 @@ export default function AboutPage() {
           </div>
 
           {/* Right Side: Profile Card */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end">
+          <div className="lg:col-span-7 flex justify-center lg:justify-end w-full">
             <div
-              className="w-full max-w-[500px] bg-[#121212] text-white rounded-[24px] border border-stone-800/80 shadow-2xl flex flex-col"
-              style={{ padding: "40px" }}
+              className="about-profile-card w-full max-w-[500px] bg-[#121212] text-white rounded-[24px] border border-stone-800/80 shadow-2xl flex flex-col p-6 sm:p-10"
             >
               <p className="text-[9px] tracking-[0.25em] text-stone-500 uppercase font-sans font-semibold mb-2">
                 DEVELOPER PROFILE - 2026
@@ -228,31 +277,29 @@ export default function AboutPage() {
       {/* ── Slide 3: Tech Stack ── */}
       <section
         id="about-section-2"
-        className="about-section-wrapper snap-start w-full h-screen flex items-center justify-center px-12 sm:px-24 lg:px-32"
+        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
       >
         <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           {/* Left Side: Tag list */}
-          <div className="lg:col-span-7 flex flex-col gap-6 w-full">
+          <div className="lg:col-span-7 flex flex-col gap-6 w-full order-2 lg:order-1">
             {TECH_CATEGORIES.map((cat) => (
               <div key={cat.title} className="flex flex-col gap-2.5">
                 <span className="text-[10px] tracking-widest text-stone-400 font-bold uppercase font-sans">
                   {cat.title}
                 </span>
-                <div className="flex flex-wrap" style={{ gap: "18px 14px" }}>
+                <div className="flex flex-wrap" style={{ gap: "14px 10px" }}>
                   {cat.tags.map((tag) =>
                     tag.isDarkBadge ? (
                       <span
                         key={tag.name}
-                        className="bg-black text-white rounded-full text-[11px] font-extrabold uppercase tracking-widest font-sans select-none shadow-sm"
-                        style={{ padding: "10px 20px" }}
+                        className="bg-black text-white rounded-full text-[11px] font-extrabold uppercase tracking-widest font-sans select-none shadow-sm px-4 py-2 sm:px-5 sm:py-3"
                       >
                         {tag.name}
                       </span>
                     ) : (
                       <span
                         key={tag.name}
-                        className="rounded-full border border-stone-200 text-stone-700 bg-white text-xs font-semibold font-sans tracking-wide inline-flex items-center gap-2 shadow-sm hover:shadow-md transition-all select-none"
-                        style={{ padding: "10px 20px" }}
+                        className="rounded-full border border-stone-200 text-stone-700 bg-white text-xs font-semibold font-sans tracking-wide inline-flex items-center gap-2 shadow-sm hover:shadow-md transition-all select-none px-4 py-2 sm:px-5 sm:py-3"
                       >
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -268,7 +315,7 @@ export default function AboutPage() {
           </div>
 
           {/* Right Side: Header text */}
-          <div className="lg:col-span-5 flex flex-col justify-center text-left">
+          <div className="lg:col-span-5 flex flex-col justify-center text-left order-1 lg:order-2">
             <p className="text-[10px] tracking-[0.2em] font-extrabold uppercase text-stone-400 mb-3 font-sans">
               TECHNOLOGY
             </p>
@@ -286,7 +333,7 @@ export default function AboutPage() {
       {/* ── Slide 4: Education ── */}
       <section
         id="about-section-3"
-        className="about-section-wrapper snap-start w-full h-screen flex items-center justify-center px-12 sm:px-24 lg:px-32"
+        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
       >
         <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           {/* Left Side: Education Text */}
@@ -313,10 +360,9 @@ export default function AboutPage() {
           </div>
 
           {/* Right Side: Education Card */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end">
+          <div className="lg:col-span-7 flex justify-center lg:justify-end w-full">
             <div
-              className="w-full max-w-[550px] bg-[#f4f3ef] border border-[#e5e4e0] rounded-[24px] shadow-xl relative flex flex-col"
-              style={{ padding: "40px" }}
+              className="about-education-card w-full max-w-[550px] bg-[#f4f3ef] border border-[#e5e4e0] rounded-[24px] shadow-xl relative flex flex-col p-6 sm:p-10"
             >
               {/* Badge */}
               <div className="bg-[#00A86B] text-white text-[9px] tracking-widest font-bold px-3.5 py-1.5 rounded-full uppercase inline-block w-fit mb-5 font-sans">
@@ -357,7 +403,7 @@ export default function AboutPage() {
       {/* ── Slide 5: Philosophy ── */}
       <section
         id="about-section-4"
-        className="about-section-wrapper snap-start w-full h-screen flex items-center justify-center px-12 sm:px-24 lg:px-32"
+        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
       >
         <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           {/* Left Side: Philosophy Text */}
@@ -375,13 +421,12 @@ export default function AboutPage() {
           </div>
 
           {/* Right Side: 2x2 grid of Cards */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end">
+          <div className="lg:col-span-7 flex justify-center lg:justify-end w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[550px]">
               {PHILOSOPHIES.map((p) => (
                 <div
                   key={p.num}
-                  className="bg-[#f4f3ef] border border-[#e5e4e0] rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 select-none"
-                  style={{ padding: "28px" }}
+                  className="about-philosophy-card bg-[#f4f3ef] border border-[#e5e4e0] rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 select-none p-5 sm:p-7"
                 >
                   <span className="text-[16px] font-black tracking-wide text-[#8B00FF] font-sans">
                     {p.num}
@@ -402,7 +447,7 @@ export default function AboutPage() {
       {/* ── Slide 6: Get in Touch ── */}
       <section
         id="about-section-5"
-        className="about-section-wrapper snap-start w-full h-screen flex flex-col justify-center items-center px-12 sm:px-24 text-center select-none"
+        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex flex-col justify-center items-center px-8 sm:px-24 text-center select-none"
       >
         <div className="max-w-3xl flex flex-col items-center gap-6">
           <p className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-stone-400 font-sans font-medium">
@@ -414,13 +459,13 @@ export default function AboutPage() {
             TOUCH
           </h2>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-6 w-full max-w-xs sm:max-w-none px-4">
             {/* Button 1: GitHub */}
             <a
               href="https://github.com/nazeeraalthea"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#ff5a36] text-white font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-[#1a1a1a] hover:border-[#ff5a36] rounded-none font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
+              className="flex w-full sm:w-auto items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#ff5a36] text-white font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-[#1a1a1a] hover:border-[#ff5a36] rounded-lg font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
               style={{ padding: "16px 32px" }}
             >
               <span>↗ GITHUB</span>
@@ -431,7 +476,7 @@ export default function AboutPage() {
               href="https://linkedin.com/in/muhammad-arya-maulana/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white hover:bg-stone-50 text-stone-900 hover:text-[#ff5a36] font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-stone-200 hover:border-[#ff5a36] rounded-none font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
+              className="flex w-full sm:w-auto items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-900 hover:text-[#ff5a36] font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-stone-200 hover:border-[#ff5a36] rounded-lg font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
               style={{ padding: "16px 32px" }}
             >
               <span>↗ LINKEDIN</span>
@@ -442,7 +487,7 @@ export default function AboutPage() {
               href="https://instagram.com/ay.rya"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white hover:bg-stone-50 text-stone-900 hover:text-[#ff5a36] font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-stone-200 hover:border-[#ff5a36] rounded-none font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
+              className="flex w-full sm:w-auto items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-900 hover:text-[#ff5a36] font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-stone-200 hover:border-[#ff5a36] rounded-lg font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
               style={{ padding: "16px 32px" }}
             >
               <span>↗ INSTAGRAM</span>

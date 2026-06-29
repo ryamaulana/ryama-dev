@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Space_Grotesk, Inter } from "next/font/google";
+import { Playfair_Display, Space_Grotesk, Inter, Bebas_Neue } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { FloatingBlob } from "@/components/ui/FloatingBlob";
 import "./globals.css";
@@ -23,6 +23,12 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
+const bebasNeue = Bebas_Neue({
+  variable: "--font-bebas-neue",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "ryama — AI Engineer",
   description:
@@ -44,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfairDisplay.variable} ${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
+      className={`${playfairDisplay.variable} ${spaceGrotesk.variable} ${inter.variable} ${bebasNeue.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#fafaf7] text-[#1a1a1a] relative overflow-x-hidden">
         {/* Global UI Layer */}

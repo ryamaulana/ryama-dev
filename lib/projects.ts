@@ -18,7 +18,7 @@ export interface Project {
 export const projects: Project[] = [
   {
     slug: "asset-lifespan-prediction",
-    name: "exigen",
+    name: "Predictive Maintenance",
     description: "Predict Asset Lifespan Before Failure Occurs",
     previewImage: "/projects/exigen-overview.png",
     previewVideo: "/projects/exigen.mp4",
@@ -36,7 +36,7 @@ export const projects: Project[] = [
   },
   {
     slug: "complaint-ticket-analysis",
-    name: "Interview System",
+    name: "Interview Assessment System",
     description: "Predict Candidate Success and Retention Before the Offer is Made.",
     previewImage: "/projects/asah-overview.jpeg",
     previewVideo: "/projects/interview-assessment-system.mp4",
@@ -54,7 +54,7 @@ export const projects: Project[] = [
   },
   {
     slug: "asset-condition-monitoring",
-    name: "sipedig",
+    name: "Mail Reader",
     description: "Read Less. Respond Smarter. Prevents Missed Opportunities.",
     previewImage: "/projects/sipedig-overview.png",
     previewVideo: "/projects/sipedig.mp4",

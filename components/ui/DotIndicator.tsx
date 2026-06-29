@@ -23,7 +23,7 @@ export function DotIndicator({ activeIndex, activeAccentColor, onNavigate }: Dot
     <>
       {/* Dots + labels column */}
       <div
-        className="fixed right-12 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3.5 items-end"
+        className="fixed right-12 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3.5 items-end portrait:hidden"
         onMouseEnter={() => setOverlayOpen(true)}
         onMouseLeave={() => {
           setOverlayOpen(false);

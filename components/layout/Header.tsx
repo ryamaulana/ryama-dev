@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { PersonStanding } from "lucide-react";
+
 
 export function Header() {
   const pathname = usePathname();
@@ -18,8 +18,13 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full flex justify-center pointer-events-none">
       <div
-        className="max-w-7xl w-full px-6 md:px-12 lg:px-20 flex justify-between items-center relative"
-        style={{ paddingTop: "var(--header-pt)", paddingBottom: "var(--header-pb)" }}
+        className="max-w-7xl w-full flex justify-between items-center relative"
+        style={{
+          paddingTop: "clamp(1.25rem, 4.5vh, 3.5rem)",
+          paddingBottom: "clamp(0.75rem, 2.5vh, 2rem)",
+          paddingLeft: "clamp(1.25rem, 4.5vw, 5rem)",
+          paddingRight: "clamp(1.25rem, 4.5vw, 5rem)",
+        }}
       >
         {/* Left Side */}
         {isAbout ? (
@@ -60,14 +65,18 @@ export function Header() {
           <nav className="pointer-events-auto flex items-center gap-6">
             <Link
               href="/about"
-              className={`transition-all duration-300 relative p-3.5 rounded-full border border-stone-200 bg-white hover:border-[#ff5a36] hover:text-[#ff5a36] hover:scale-105 active:scale-95 flex items-center justify-center shadow-md hover:shadow-lg ${
-                isAbout ? "text-[#ff5a36] border-[#ff5a36] ring-2 ring-[#ff5a36]/20" : "text-[#6b6b6b]"
+              className={`transition-all duration-300 w-10 h-10 rounded-full border bg-white hover:border-[#ff5a36] hover:text-[#ff5a36] hover:scale-105 active:scale-95 flex items-center justify-center shadow-md hover:shadow-lg shrink-0 ${
+                isAbout
+                  ? "text-[#ff5a36] border-[#ff5a36] ring-2 ring-[#ff5a36]/20"
+                  : "text-[#6b6b6b] border-stone-200"
               }`}
               style={{ textDecoration: "none" }}
               data-cursor="ABOUT"
               aria-label="About"
             >
-              <PersonStanding className="w-8 h-8" strokeWidth={2.2} />
+              <span className="font-bold text-[11px] tracking-[0.04em] font-sans leading-none select-none">
+                AR
+              </span>
             </Link>
           </nav>
         ) : (

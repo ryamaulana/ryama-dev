@@ -46,12 +46,14 @@
 /* ============================================================
    BASE RESET
    ============================================================ */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 :root {
@@ -223,9 +225,64 @@ body {
    ABOUT PAGE GRID BACKGROUND
    ============================================================ */
 .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px);
   background-size: 80px 80px;
   background-position: center center;
+}
+
+/* ============================================================
+   PORTRAIT SCROLL & LAYOUT FIXES
+   ============================================================ */
+@media (orientation: portrait) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* Force natural scroll and height on about page container */
+  .about-page-container {
+    height: auto !important;
+    overflow-y: visible !important;
+    scroll-snap-type: none !important;
+  }
+
+  /* Force healthy padding and remove snap on section wrappers */
+  .about-section-wrapper {
+    height: auto !important;
+    min-height: 100svh !important;
+    padding-left: 2rem !important;  /* 32px side margin */
+    padding-right: 2rem !important; /* 32px side margin */
+    padding-top: 6rem !important;   /* top clearance for fixed header */
+    padding-bottom: 6rem !important;/* bottom clearance for dot indicator */
+    scroll-snap-align: none !important;
+  }
+
+  /* Responsive card padding overrides on mobile */
+  .about-profile-card,
+  .about-education-card {
+    padding: 1.5rem !important; /* 24px internal padding */
+    width: 100% !important;
+  }
+
+  .about-philosophy-card {
+    padding: 1.25rem !important; /* 20px padding */
+  }
+
+  /* Dot Indicator mobile/portrait horizontal styling */
+  .about-dot-indicator {
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 2rem !important;
+    transform: translateX(-50%) !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+
+  /* Hide labels on portrait dots */
+  .about-dot-indicator-label {
+    display: none !important;
+  }
 }
