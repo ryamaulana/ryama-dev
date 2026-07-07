@@ -348,6 +348,36 @@ export default function Home() {
       const container = containerRef.current;
       if (!container) return;
 
+      // --- HERO FADE OUT (Global, both orientations) ---
+      // Scrub the hero section's opacity from 1→0 as it scrolls away.
+      // This ensures there is no visual overlap between hero content and the
+      // project strip: by the time the strip becomes visible (hero fully gone),
+      // the hero is already transparent.
+      gsap.to(".hero-section-wrapper", {
+        opacity: 0,
+        ease: "none",
+        scrollTrigger: {
+          trigger: ".hero-section-wrapper",
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+
+      // --- OUTRO COVER (Global) ---
+      // When the outro section starts entering the viewport (its top reaches the
+      // bottom edge), immediately hide the project strip + text panel by resetting
+      // activeProjectIndex to null. The outro section has z-100 with a solid
+      // background, so it visually covers any remaining project elements as it
+      // slides up from below — giving a clean "projects exit, outro enters" feel.
+      ScrollTrigger.create({
+        trigger: ".outro-section",
+        start: "top 100%",  // fires the moment outro top hits viewport bottom
+        id: "outro-cover-trigger",
+        onEnter: () => setActiveProjectIndex(null),
+        onLeaveBack: () => setActiveProjectIndex(projects.length - 1),
+      });
+
       // --- OUTRO ENTRANCE ANIMATION (Global) ---
       // Triggered by GSAP ScrollTrigger when the section first enters viewport.
       // Parallax mouse-move uses Framer Motion (handled in OutroSection/PhotoStack).
@@ -380,7 +410,7 @@ export default function Home() {
             { opacity: 0, y: 50, scale: 0.95 },
             { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power2.out", delay: 0.2 }
           );
-          // Front layer — "peek scale" micro-animation from 0.95 → 1.0
+          // Front layer
           gsap.fromTo(
             ".outro-photo-front",
             { opacity: 0, y: 60, scale: 0.95 },
@@ -396,12 +426,14 @@ export default function Home() {
         // --- LANDSCAPE ANIMATION & SCROLLTRIGGERS ---
         const sections = gsap.utils.toArray<HTMLElement>(".project-section-wrapper");
 
-        // Fire activeProjectIndex(0) the MOMENT the hero leaves the viewport,
-        // so the 3D-skewed strip is already in place before project-0 is reached.
-        // onEnterBack resets to null so the hero is clean when scrolling back up.
+        // Fire activeProjectIndex(0) only when hero is COMPLETELY off-screen
+        // (its bottom has passed the viewport top). Combined with the hero fade-out
+        // scrub above, this gives a true sequential transition:
+        //   hero fades out → screen clean → project strip appears
+        // No overlap between hero content and the 3D strip.
         ScrollTrigger.create({
           trigger: ".hero-section-wrapper",
-          start: "bottom 90%", // fires just before hero bottom exits viewport
+          start: "bottom top",  // hero 100% scrolled away
           id: "hero-leave-trigger",
           onLeave: () => setActiveProjectIndex(0),
           onEnterBack: () => setActiveProjectIndex(null),
