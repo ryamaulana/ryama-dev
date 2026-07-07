@@ -3,11 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface CustomCursorProps {
-  /** Elements with data-cursor="view" will trigger the VIEW label */
-}
-
-export function CustomCursor(_: CustomCursorProps) {
+export function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
   const [cursorLabel, setCursorLabel] = useState<string | null>(null);
@@ -20,10 +16,12 @@ export function CustomCursor(_: CustomCursorProps) {
     const fineMq = window.matchMedia("(pointer: fine)");
     
     if (coarseMq.matches || !fineMq.matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(false);
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsVisible(true);
     document.body.classList.add("hide-native-cursor");
 

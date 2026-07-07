@@ -451,7 +451,7 @@ export default function AboutPage() {
       >
         <div className="max-w-3xl flex flex-col items-center gap-6">
           <p className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-stone-400 font-sans font-medium">
-            LET'S BUILD SOMETHING
+            {"LET'S BUILD SOMETHING"}
           </p>
 
           <h2 className="font-serif leading-[0.9] text-[#1a1a1a] font-extrabold uppercase text-[clamp(44px,8vw,110px)] font-sans tracking-tight mb-4">

@@ -62,26 +62,27 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
   const isFirstRender = useRef(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
-  // Slide the entire panel in/out of the viewport when projects enter/exit
+  // Fade the panel in/out when activeIndex changes. Keeping the panel in place
+  // (no horizontal slide translation) ensures it is always in its final 3D skew
+  // perspective at all times — no movement-related flattening or perspective warping.
   useEffect(() => {
     if (!containerRef.current) return;
 
     if (activeIndex === null) {
       gsap.to(containerRef.current, {
-        left: "115%",
         opacity: 0,
-        duration: 0.6,
-        ease: "power3.inOut",
+        duration: 0.5,
+        ease: "power2.inOut",
       });
     } else {
       gsap.to(containerRef.current, {
-        left: "0%",
         opacity: 1,
-        duration: 0.7,
-        ease: "power3.out",
+        duration: 0.6,
+        ease: "power2.out",
       });
     }
   }, [activeIndex]);
@@ -122,6 +123,24 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
     };
   }, [activeIndex]);
 
+  // Animate card scale/opacity using GSAP to avoid browser CSS transform transition flattening bugs
+  useEffect(() => {
+    if (!stripRef.current) return;
+    const cards = Array.from(stripRef.current.children) as HTMLElement[];
+    cards.forEach((card, i) => {
+      const isActive = activeIndex !== null && i === activeIndex;
+      const isAdjacent = activeIndex !== null && Math.abs(i - activeIndex) === 1;
+
+      gsap.to(card, {
+        scale: isActive ? 1.0 : 0.85,
+        opacity: isActive ? 1 : isAdjacent ? 0.45 : 0,
+        duration: 0.65,
+        ease: "power3.out",
+        overwrite: "auto",
+      });
+    });
+  }, [activeIndex]);
+
   // Recalculate positions on window resize
   useEffect(() => {
     const onResize = () => {
@@ -149,9 +168,9 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
       }}
       aria-hidden="true"
     >
-      {/* Top fade overlay: blends scrolling list seamlessly using a transitioning sibling overlay with a mask */}
+      {/* Top fade overlay */}
       <div
-        className="transition-colors duration-500"
+        className="transition-all duration-500"
         style={{
           position: "absolute",
           top: 0,
@@ -163,12 +182,13 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
           WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
           zIndex: 30,
           pointerEvents: "none",
+          opacity: activeIndex === null ? 0 : 1,
         }}
       />
 
       {/* Bottom fade overlay */}
       <div
-        className="transition-colors duration-500"
+        className="transition-all duration-500"
         style={{
           position: "absolute",
           bottom: 0,
@@ -180,23 +200,29 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
           WebkitMaskImage: "linear-gradient(to top, black 0%, transparent 100%)",
           zIndex: 30,
           pointerEvents: "none",
+          opacity: activeIndex === null ? 0 : 1,
         }}
       />
 
-      {/* Slide & Fade Wrapper Container — animated via GSAP left to slide in/out */}
+      {/*
+        Stationary & Fade Wrapper.
+        Keeping this element at its final 0% position from the start ensures the
+        nested card-3d-wrapper is always rendered in its exact 3D skewed state.
+        Entering active index states will trigger a pure opacity fade-in.
+      */}
       <div
         ref={containerRef}
         style={{
           position: "absolute",
           top: 0,
           bottom: 0,
+          left: 0,
           width: "100%",
           transformStyle: "preserve-3d",
-          left: "115%", // Starts hidden off-screen, animated via GSAP left
           opacity: 0,
         }}
       >
-        {/* 3D Rotated Wrapper Container — rotates the entire vertical slide strip as a single plane */}
+        {/* 3D Rotated Wrapper — rotates the entire strip as a single 3D plane */}
         <div
           className="card-3d-wrapper"
           style={{
@@ -208,6 +234,7 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
             WebkitBackfaceVisibility: "hidden",
           }}
         >
+
         {/* THE STRIP — all project images stacked vertically inside the rotated space */}
         <div
           ref={stripRef}
@@ -227,12 +254,9 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
                   position: "relative",
                   flexShrink: 0,
                   transformStyle: "preserve-3d",
-                  opacity: isActive ? 1 : isAdjacent ? 0.45 : 0,
-                  // Scale is handled directly on the card container
-                  transform: isActive ? "scale(1.0)" : "scale(0.85)",
-                  transition: mounted
-                    ? "transform 0.65s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.65s cubic-bezier(0.25, 1, 0.5, 1)"
-                    : "none",
+                  // Set safe static defaults for SSR / initial render; GSAP animates them
+                  opacity: activeIndex === null ? 0 : isActive ? 1 : isAdjacent ? 0.45 : 0,
+                  transform: activeIndex === null ? "scale(0.85)" : isActive ? "scale(1.0)" : "scale(0.85)",
                 }}
               >
                 <div

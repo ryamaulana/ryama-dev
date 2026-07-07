@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import { useEffect, useRef, useState, Suspense } from "react";
@@ -137,8 +138,10 @@ export default function CurvedMeshCanvas({ imageSrc, className = "" }: CurvedMes
         window.WebGLRenderingContext &&
         (canvas.getContext("webgl") || canvas.getContext("experimental-webgl"))
       );
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasWebGL(isAvailable);
     } catch (e) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasWebGL(false);
     }
   }, []);

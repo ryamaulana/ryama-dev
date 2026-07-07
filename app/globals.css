@@ -286,3 +286,51 @@ body {
     display: none !important;
   }
 }
+
+/* ============================================================
+   PHOTO STACK — RESPONSIVE SCALE
+   Base sizes are tuned for desktop (≥1280px).
+   Scale down proportionally on smaller viewports so all spread
+   ratios and offsets are preserved automatically.
+   ============================================================ */
+
+/* Default: full size at 1280px+ */
+.photo-stack-scaler {
+  transform: scale(1);
+  transform-origin: center center;
+}
+
+/* Large desktop: allow slight upscale at very wide screens */
+@media (min-width: 1536px) {
+  .photo-stack-scaler {
+    transform: scale(1.08);
+  }
+}
+
+/* Medium-large: 1024–1279px */
+@media (max-width: 1279px) {
+  .photo-stack-scaler {
+    transform: scale(0.82);
+  }
+}
+
+/* Medium: 768–1023px */
+@media (max-width: 1023px) {
+  .photo-stack-scaler {
+    transform: scale(0.68);
+  }
+}
+
+/* Small tablets / large phones: 640–767px */
+@media (max-width: 767px) {
+  .photo-stack-scaler {
+    transform: scale(0.55);
+  }
+}
+
+/* Mobile: <640px */
+@media (max-width: 639px) {
+  .photo-stack-scaler {
+    transform: scale(0.46);
+  }
+}

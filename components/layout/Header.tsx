@@ -2,16 +2,33 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 
 export function Header() {
   const pathname = usePathname();
   const isAbout = pathname === "/about";
   const isHome = pathname === "/";
-  const isProjects = pathname === "/projects";
 
-  // Hide logo on home (visible on projects, about, and case study pages)
-  const showLogo = !isHome;
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isHome) return;
+
+    const handleScroll = () => {
+      // Show logo after scrolling past 95% of the viewport height (when Hero is fully scrolled out)
+      setScrolled(window.scrollY > window.innerHeight * 0.95);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Run once initially to capture page refreshes when scrolled down
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
+
+  // Hide logo on home unless scrolled past the hero section
+  const showLogo = !isHome || scrolled;
   // Show about navigation on all pages
   const showNav = true;
 
