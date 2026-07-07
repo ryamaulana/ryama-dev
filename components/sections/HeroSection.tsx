@@ -4,64 +4,81 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 
-// ─── Role words that cycle automatically ────────────────────────────────────
+// ─── Config ─────────────────────────────────────────────────────────────────
 const ROLE_WORDS = ["AI ENGINEER", "FULLSTACK DEVELOPER"];
 const CYCLE_INTERVAL_MS = 2800;
+const Y_OFFSET = 10;         // px magnitude for up / down
+const ENTER_DURATION = 0.42; // seconds per letter — enter
+const EXIT_DURATION  = 0.22; // seconds per letter — exit (faster, snappier)
+const STAGGER_S      = 0.028; // seconds delay between consecutive letters
 
-// ─── Per-letter kinetic animation ───────────────────────────────────────────
-// Rules (Option B — index resets per word):
-//   • Index is 1-based, resets for each new word.
-//   • Odd index  → exit/enter direction: UP   (translateY negative)
-//   • Even index → exit/enter direction: DOWN (translateY positive)
-// Space characters count as a slot in the index sequence but are rendered as
-// a non-breaking space (\u00A0) with no animation element needed.
+// ─── Kinetic word component ──────────────────────────────────────────────────
+// Renders a single word as a row of individually-animated letters.
+// Wrapped in AnimatePresence so the previous word's letters play their exit
+// animation before (or while) the new word's letters enter.
 
-const Y_OFFSET = 10; // px magnitude for up/down movement
-const LETTER_DURATION = 0.42;
-const LETTER_STAGGER = 0.028; // s delay between each letter
-
-function getVariants(isOdd: boolean) {
-  const y = isOdd ? -Y_OFFSET : Y_OFFSET;
-  return {
-    initial: { opacity: 0, y },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y },
-  };
+interface KineticWordProps {
+  word: string;
 }
 
-interface KineticLetterProps {
-  char: string;
-  /** 1-based position index within the current word */
-  charIndex: number;
-  /** Unique key per word+position so AnimatePresence detects exit/enter */
-  wordKey: string;
-}
-
-function KineticLetter({ char, charIndex, wordKey }: KineticLetterProps) {
-  const isOdd = charIndex % 2 !== 0;
-  const variants = getVariants(isOdd);
-  const delay = (charIndex - 1) * LETTER_STAGGER;
-
-  if (char === " ") {
-    // Space: occupies index slot but renders as static gap, no animation needed.
-    return <span key={`space-${wordKey}-${charIndex}`}>&nbsp;</span>;
-  }
-
+function KineticWord({ word }: KineticWordProps) {
   return (
-    <motion.span
-      key={`${wordKey}-${charIndex}`}
-      style={{ display: "inline-block" }}
-      initial={variants.initial}
-      animate={{ ...variants.animate, transition: { duration: LETTER_DURATION, delay, ease: "easeOut" } }}
-      exit={{ ...variants.exit, transition: { duration: LETTER_DURATION * 0.8, delay, ease: "easeIn" } }}
+    /*
+      absolute + left-50% + translateX(-50%) centres the word without affecting
+      the outer container's layout — so when words of different lengths swap,
+      the outer div never resizes and there is no positional jump.
+    */
+    <motion.div
+      style={{
+        position: "absolute",
+        left: "50%",
+        x: "-50%",      // Framer Motion shorthand for translateX
+        top: 0,
+        bottom: 0,
+        display: "flex",
+        alignItems: "center",
+        whiteSpace: "nowrap",
+      }}
     >
-      {char}
-    </motion.span>
+      {word.split("").map((char, i) => {
+        // Index is 1-based, resets per word (as per spec Option B)
+        const isOdd = (i + 1) % 2 !== 0;
+        const y = isOdd ? -Y_OFFSET : Y_OFFSET;
+
+        if (char === " ") {
+          // Spaces occupy an index slot but need no animation element.
+          return (
+            <span key={`space-${i}`} style={{ display: "inline-block" }}>
+              &nbsp;
+            </span>
+          );
+        }
+
+        return (
+          <motion.span
+            key={i}
+            style={{ display: "inline-block" }}
+            // ─── initial / animate / exit ────────────────────────────────
+            // transition is a TOP-LEVEL PROP here, not nested inside animate/exit.
+            // FM ignores transition if placed inside the animate object values.
+            initial={{ opacity: 0, y }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y }}
+            transition={{
+              duration: ENTER_DURATION,
+              delay: i * STAGGER_S,
+              ease: "easeOut",
+            }}
+          >
+            {char}
+          </motion.span>
+        );
+      })}
+    </motion.div>
   );
 }
 
 // ─── Main component ──────────────────────────────────────────────────────────
-
 export function HeroSection() {
   const [activeWordIndex, setActiveWordIndex] = useState(0);
 
@@ -80,7 +97,7 @@ export function HeroSection() {
       aria-label="Hero"
     >
       {/* ─── CENTER BLOCK: 3-block typographic layout ─── */}
-      <div className="relative z-10 flex flex-col items-center text-center gap-0 w-full px-6">
+      <div className="relative z-10 flex flex-col items-center text-center w-full px-6">
 
         {/* Block 1 — Location */}
         <p
@@ -94,7 +111,7 @@ export function HeroSection() {
           Jakarta, Indonesia
         </p>
 
-        {/* Block 2 — Name (dominant element) */}
+        {/* Block 2 — Name */}
         <h1
           className="font-black uppercase leading-[0.88] tracking-[-0.02em] text-[#1a1a1a] font-sans"
           style={{ fontSize: "clamp(56px, 15vw, 172px)" }}
@@ -103,39 +120,39 @@ export function HeroSection() {
         </h1>
 
         {/* Block 3 — Kinetic role text */}
+        {/*
+          Outer div: fixed height prevents layout shift on word swap.
+          position:relative is required so the inner absolute word div
+          can centre itself inside without escaping the flow.
+          overflow:hidden clips letters that are mid-translate.
+        */}
         <div
           aria-live="polite"
           aria-label={`Role: ${currentWord}`}
-          className="font-sans font-medium uppercase text-stone-400 overflow-hidden"
+          className="font-sans font-medium uppercase text-stone-400"
           style={{
             fontSize: "clamp(0.6rem, 1.1vw, 0.75rem)",
             letterSpacing: "0.28em",
             marginTop: "clamp(0.75rem, 2vh, 1.5rem)",
-            height: "1.6em",          // fixed height prevents layout shift on word change
-            display: "flex",
-            alignItems: "center",
+            position: "relative",
+            height: "1.6em",
+            overflow: "hidden",
+            width: "100%",
           }}
         >
           {/*
-            AnimatePresence mode="popLayout":
-            Exit animation of old word overlaps with enter of new word for a
-            smooth zig-zag letter swap. Each letter is keyed by wordIndex+charIndex
-            so AnimatePresence correctly unmounts old letters and mounts new ones.
+            mode="sync": old word exits while new word enters simultaneously.
+            Each letter has its own stagger delay, creating the zig-zag wave.
+            The absolute-positioned KineticWord prevents any container layout
+            recalculation when word length changes — zero position jumps.
           */}
-          <AnimatePresence mode="popLayout">
-            {currentWord.split("").map((char, idx) => (
-              <KineticLetter
-                key={`${activeWordIndex}-${idx}`}
-                char={char}
-                charIndex={idx + 1}
-                wordKey={`${activeWordIndex}`}
-              />
-            ))}
+          <AnimatePresence mode="sync">
+            <KineticWord key={activeWordIndex} word={currentWord} />
           </AnimatePresence>
         </div>
       </div>
 
-      {/* ─── SCROLL INDICATOR — bouncing arrow ─── */}
+      {/* ─── SCROLL INDICATOR ─── */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none select-none">
         <motion.div
           animate={{ y: [0, 7, 0] }}
