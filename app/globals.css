@@ -47,6 +47,7 @@
    BASE RESET
    ============================================================ */
 @layer base {
+
   *,
   *::before,
   *::after {
@@ -251,22 +252,28 @@ body {
   .about-section-wrapper {
     height: auto !important;
     min-height: 100svh !important;
-    padding-left: 2rem !important;  /* 32px side margin */
-    padding-right: 2rem !important; /* 32px side margin */
-    padding-top: 6rem !important;   /* top clearance for fixed header */
-    padding-bottom: 6rem !important;/* bottom clearance for dot indicator */
+    padding-left: 2rem !important;
+    /* 32px side margin */
+    padding-right: 2rem !important;
+    /* 32px side margin */
+    padding-top: 6rem !important;
+    /* top clearance for fixed header */
+    padding-bottom: 6rem !important;
+    /* bottom clearance for dot indicator */
     scroll-snap-align: none !important;
   }
 
   /* Responsive card padding overrides on mobile */
   .about-profile-card,
   .about-education-card {
-    padding: 1.5rem !important; /* 24px internal padding */
+    padding: 1.5rem !important;
+    /* 24px internal padding */
     width: 100% !important;
   }
 
   .about-philosophy-card {
-    padding: 1.25rem !important; /* 20px padding */
+    padding: 1.25rem !important;
+    /* 20px padding */
   }
 
   /* Dot Indicator mobile/portrait horizontal styling */

@@ -66,25 +66,23 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
     setMounted(true);
   }, []);
 
-  // Fade the panel in/out when activeIndex changes. Keeping the panel in place
-  // (no horizontal slide translation) ensures it is always in its final 3D skew
-  // perspective at all times — no movement-related flattening or perspective warping.
+  // Show/hide the container via `visibility` — NOT opacity.
+  //
+  // Why: `containerRef` is an ancestor of `.card-3d-wrapper` which has
+  // `transformStyle: preserve-3d`. Browsers only promote a 3D-transformed
+  // subtree to a GPU compositing layer when that subtree is visible/painted.
+  // If the ancestor has `opacity: 0`, the browser skips GPU promotion entirely
+  // and falls back to 2D rasterisation. The moment opacity becomes non-zero,
+  // the compositor kicks in — but that first painted frame is flat (no 3D
+  // transform applied yet), causing the visible "lurus → snap skew" flash.
+  //
+  // Using `visibility: hidden / visible` instead avoids this: the element is
+  // still painted (GPU layer promoted) but just not displayed — so when it
+  // switches to visible the 3D perspective is already fully applied.
   useEffect(() => {
     if (!containerRef.current) return;
-
-    if (activeIndex === null) {
-      gsap.to(containerRef.current, {
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.inOut",
-      });
-    } else {
-      gsap.to(containerRef.current, {
-        opacity: 1,
-        duration: 0.6,
-        ease: "power2.out",
-      });
-    }
+    containerRef.current.style.visibility =
+      activeIndex === null ? "hidden" : "visible";
   }, [activeIndex]);
 
   // Set initial position and animate on index changes using dynamic DOM calculations
@@ -219,7 +217,11 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
           left: 0,
           width: "100%",
           transformStyle: "preserve-3d",
-          opacity: 0,
+          // opacity stays 1 at all times — show/hide is handled via visibility
+          // (see useEffect above). This keeps the GPU compositing layer alive
+          // so the 3D transform is applied before the element becomes visible.
+          opacity: 1,
+          visibility: "hidden", // default hidden; toggled to visible by useEffect
         }}
       >
         {/* 3D Rotated Wrapper — rotates the entire strip as a single 3D plane */}
@@ -229,6 +231,11 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
             position: "absolute",
             inset: 0,
             transformStyle: "preserve-3d",
+            // translateZ(0) is prepended to force immediate GPU compositing layer
+            // promotion at first paint — before any parent visibility/opacity change.
+            // Without it, the browser may defer layer creation and render one flat
+            // frame before the 3D perspective snaps in.
+            transform: "translateZ(0) rotateX(12deg) rotateY(-26deg) rotateZ(5deg) skewX(-4deg)",
             willChange: "transform",
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
