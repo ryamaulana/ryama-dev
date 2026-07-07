@@ -364,6 +364,63 @@ export default function Home() {
         },
       });
 
+      // --- FLYING RYAMA — shared element transition hero → header ---
+      // The flying-ryama element is a fixed div that starts exactly on top of
+      // the hero placeholder (large, centred), then scrolls its position and
+      // font-size toward the header RYAMA link as the hero exits.
+      //
+      // Both positions are measured via getBoundingClientRect() at setup time
+      // so the animation is accurate regardless of viewport size / clamped values.
+      (() => {
+        const flyingEl   = document.getElementById("flying-ryama");
+        const heroAnchor = document.getElementById("hero-ryama-placeholder");
+        const headerAnchor = document.getElementById("header-ryama-target");
+        if (!flyingEl || !heroAnchor || !headerAnchor) return;
+
+        const heroRect   = heroAnchor.getBoundingClientRect();
+        const headerRect = headerAnchor.getBoundingClientRect();
+
+        const heroFontSize   = parseFloat(getComputedStyle(heroAnchor).fontSize);   // px
+        const headerFontSize = parseFloat(getComputedStyle(headerAnchor).fontSize); // px
+
+        // Place flying element exactly over the hero placeholder before making it visible
+        gsap.set(flyingEl, {
+          top:       heroRect.top,
+          left:      heroRect.left,
+          width:     heroRect.width,
+          height:    heroRect.height,
+          fontSize:  heroFontSize,
+          opacity:   1,
+          visibility: "visible",
+        });
+
+        // Scrub: hero position (large) → header position (small)
+        gsap.to(flyingEl, {
+          top:      headerRect.top,
+          left:     headerRect.left,
+          width:    headerRect.width,
+          height:   headerRect.height,
+          fontSize: headerFontSize,
+          ease:     "none",
+          scrollTrigger: {
+            trigger: ".hero-section-wrapper",
+            start:   "top top",
+            end:     "bottom top",
+            scrub:   0.25,
+          },
+        });
+
+        // Handoff: when hero is 100% gone, fade out flying element and let
+        // the real header RYAMA (opacity transition in Header.tsx) take over.
+        ScrollTrigger.create({
+          trigger: ".hero-section-wrapper",
+          start:   "bottom top",
+          id:      "flying-ryama-handoff",
+          onLeave:      () => gsap.set(flyingEl, { opacity: 0 }),
+          onEnterBack:  () => gsap.set(flyingEl, { opacity: 1 }),
+        });
+      })();
+
       // --- OUTRO COVER (Global) ---
       // When the outro section starts entering the viewport (its top reaches the
       // bottom edge), immediately hide the project strip + text panel by resetting
@@ -574,6 +631,36 @@ export default function Home() {
         "--color-accent": activeAccentColor,
       } as React.CSSProperties}
     >
+      {/*
+        ── Flying RYAMA ──
+        A fixed element that starts centred on the hero (same position as the
+        invisible placeholder inside HeroSection) and GSAP-scrubs its way to the
+        header logo position as the hero scrolls out.
+        Starts as visibility:hidden / opacity:0; GSAP sets both after it measures
+        and positions the element, preventing any SSR flash.
+      */}
+      <div
+        id="flying-ryama"
+        aria-hidden="true"
+        className="font-black uppercase font-sans text-[#1a1a1a] select-none pointer-events-none"
+        style={{
+          position: "fixed",
+          zIndex: 55,         // above header (z-50), below cursor
+          top: 0,
+          left: 0,
+          lineHeight: 0.88,
+          letterSpacing: "-0.02em",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          // Hidden until GSAP measures and positions it (prevents SSR flash)
+          opacity: 0,
+          visibility: "hidden",
+        }}
+      >
+        RYAMA
+      </div>
+
       {/* ── 0. Hero Section ── */}
       <div className="hero-section-wrapper w-full">
         <HeroSection />

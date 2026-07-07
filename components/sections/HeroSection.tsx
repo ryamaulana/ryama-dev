@@ -13,26 +13,17 @@ const EXIT_DURATION  = 0.22; // seconds per letter — exit (faster, snappier)
 const STAGGER_S      = 0.028; // seconds delay between consecutive letters
 
 // ─── Kinetic word component ──────────────────────────────────────────────────
-// Renders a single word as a row of individually-animated letters.
-// Wrapped in AnimatePresence so the previous word's letters play their exit
-// animation before (or while) the new word's letters enter.
-
 interface KineticWordProps {
   word: string;
 }
 
 function KineticWord({ word }: KineticWordProps) {
   return (
-    /*
-      absolute + left-50% + translateX(-50%) centres the word without affecting
-      the outer container's layout — so when words of different lengths swap,
-      the outer div never resizes and there is no positional jump.
-    */
     <motion.div
       style={{
         position: "absolute",
         left: "50%",
-        x: "-50%",      // Framer Motion shorthand for translateX
+        x: "-50%",
         top: 0,
         bottom: 0,
         display: "flex",
@@ -41,12 +32,10 @@ function KineticWord({ word }: KineticWordProps) {
       }}
     >
       {word.split("").map((char, i) => {
-        // Index is 1-based, resets per word (as per spec Option B)
         const isOdd = (i + 1) % 2 !== 0;
         const y = isOdd ? -Y_OFFSET : Y_OFFSET;
 
         if (char === " ") {
-          // Spaces occupy an index slot but need no animation element.
           return (
             <span key={`space-${i}`} style={{ display: "inline-block" }}>
               &nbsp;
@@ -58,9 +47,6 @@ function KineticWord({ word }: KineticWordProps) {
           <motion.span
             key={i}
             style={{ display: "inline-block" }}
-            // ─── initial / animate / exit ────────────────────────────────
-            // transition is a TOP-LEVEL PROP here, not nested inside animate/exit.
-            // FM ignores transition if placed inside the animate object values.
             initial={{ opacity: 0, y }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y }}
@@ -96,7 +82,6 @@ export function HeroSection() {
       className="w-full h-screen relative flex flex-col justify-center items-center overflow-hidden select-none bg-[#FAFAF7]"
       aria-label="Hero"
     >
-      {/* ─── CENTER BLOCK: 3-block typographic layout ─── */}
       <div className="relative z-10 flex flex-col items-center text-center w-full px-6">
 
         {/* Block 1 — Location */}
@@ -111,21 +96,30 @@ export function HeroSection() {
           Jakarta, Indonesia
         </p>
 
-        {/* Block 2 — Name */}
-        <h1
-          className="font-black uppercase leading-[0.88] tracking-[-0.02em] text-[#1a1a1a] font-sans"
-          style={{ fontSize: "clamp(56px, 15vw, 172px)" }}
+        {/*
+          Block 2 — RYAMA placeholder.
+          The real RYAMA text is rendered as a fixed "flying-ryama" element in
+          page.tsx and animated by GSAP ScrollTrigger. This invisible placeholder
+          maintains the exact same dimensions so that the flex layout of location +
+          RYAMA + role-text remains centred correctly in the hero section.
+          id="hero-ryama-placeholder" lets GSAP measure its viewport position to
+          know where to start the flying element's journey.
+        */}
+        <div
+          id="hero-ryama-placeholder"
+          aria-hidden="true"
+          className="font-black uppercase font-sans select-none pointer-events-none"
+          style={{
+            fontSize: "clamp(56px, 15vw, 172px)",
+            lineHeight: 0.88,
+            letterSpacing: "-0.02em",
+            color: "transparent",    // invisible — flying element renders on top
+          }}
         >
           RYAMA
-        </h1>
+        </div>
 
         {/* Block 3 — Kinetic role text */}
-        {/*
-          Outer div: fixed height prevents layout shift on word swap.
-          position:relative is required so the inner absolute word div
-          can centre itself inside without escaping the flow.
-          overflow:hidden clips letters that are mid-translate.
-        */}
         <div
           aria-live="polite"
           aria-label={`Role: ${currentWord}`}
@@ -140,12 +134,6 @@ export function HeroSection() {
             width: "100%",
           }}
         >
-          {/*
-            mode="sync": old word exits while new word enters simultaneously.
-            Each letter has its own stagger delay, creating the zig-zag wave.
-            The absolute-positioned KineticWord prevents any container layout
-            recalculation when word length changes — zero position jumps.
-          */}
           <AnimatePresence mode="sync">
             <KineticWord key={activeWordIndex} word={currentWord} />
           </AnimatePresence>

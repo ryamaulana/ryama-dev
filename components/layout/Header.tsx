@@ -16,20 +16,18 @@ export function Header() {
     if (!isHome) return;
 
     const handleScroll = () => {
-      // Show logo after scrolling past 95% of the viewport height (when Hero is fully scrolled out)
-      setScrolled(window.scrollY > window.innerHeight * 0.95);
+      // Show real header RYAMA only when hero is 100% gone (bottom top threshold).
+      // This aligns with the flying RYAMA handoff: flying element fades out at
+      // the same scroll position, real header RYAMA fades in — seamless swap.
+      setScrolled(window.scrollY >= window.innerHeight - 4);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    // Run once initially to capture page refreshes when scrolled down
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHome]);
 
-  // Hide logo on home unless scrolled past the hero section
-  const showLogo = !isHome || scrolled;
-  // Show about navigation on all pages
   const showNav = true;
 
   return (
@@ -52,17 +50,30 @@ export function Header() {
           >
             ← Portfolio
           </Link>
-        ) : showLogo ? (
+        ) : (
+          /*
+            On the home page: the RYAMA link is always in the DOM so that the
+            flying-RYAMA GSAP animation can measure its exact target position via
+            getBoundingClientRect(). It is visually invisible (opacity 0, pointer-
+            events none) while the flying element is doing the journey, then
+            becomes visible when the handoff is complete (scrolled = true).
+
+            On other pages (projects, etc.): show normally, no flying element logic.
+          */
           <Link
+            id="header-ryama-target"
             href="/"
-            className="pointer-events-auto font-sans font-black uppercase text-xl md:text-2xl tracking-wider text-[#1a1a1a] hover:scale-105 active:scale-95 transition-all duration-300 no-underline"
+            className="pointer-events-auto font-sans font-black uppercase text-xl md:text-2xl tracking-wider text-[#1a1a1a] hover:scale-105 active:scale-95 transition-transform duration-300 no-underline"
             data-cursor="HOME"
             aria-label="Home"
+            style={{
+              opacity: isHome ? (scrolled ? 1 : 0) : 1,
+              pointerEvents: isHome ? (scrolled ? "auto" : "none") : "auto",
+              transition: "opacity 0.15s ease",
+            }}
           >
             RYAMA
           </Link>
-        ) : (
-          <div />
         )}
 
         {/* Center Side (Only visible on About page) */}
@@ -103,4 +114,3 @@ export function Header() {
     </header>
   );
 }
-
