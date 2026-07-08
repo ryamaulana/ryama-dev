@@ -10,7 +10,7 @@ interface ProjectImageStripProps {
   bgTone?: string;
 }
 
-const GAP_PX = 24;
+const GAP_PX = 64;
 
 export interface VideoPlayerProps {
   src: string;
@@ -291,8 +291,8 @@ export function ProjectImageStrip({ activeIndex, bgTone = "#FAFAF7" }: ProjectIm
                       filter: isActive
                         ? "none"
                         : isAdjacent
-                        ? "grayscale(100%) brightness(0.85)"
-                        : "grayscale(100%) brightness(0.6)",
+                        ? "grayscale(100%) brightness(0.85) blur(3px)"
+                        : "grayscale(100%) brightness(0.6) blur(4px)",
                       transition: mounted
                         ? "filter 0.65s cubic-bezier(0.25, 1, 0.5, 1)"
                         : "none",

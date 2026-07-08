@@ -25,8 +25,8 @@ export const projects: Project[] = [
     previewBgColor: "#f3f6fa",
     caseStudyUrl: "https://github.com/NazeeraAlthea/exigen-smart-maintenance",
     modelIndicator: "Predictive Maintenance",
-    titleColor: "#00A86B", // Kelly Green
-    accentColor: "#00A86B", // Match about page green
+    titleColor: "#1A1A1A",
+    accentColor: "#1B4332", // Deep Forest Green
     eyebrow: "ASSET HEALTH",
     metrics: [
       { label: "Accuracy", value: "96.4%" },
@@ -43,8 +43,8 @@ export const projects: Project[] = [
     previewBgColor: "#cadbfc",
     caseStudyUrl: "https://github.com/acoramadan/Interview-Assesment-System",
     modelIndicator: "NLP & Extraction",
-    titleColor: "#0052FF", // Vibrant Royal Blue
-    accentColor: "#0052FF", // Match about page blue
+    titleColor: "#1A1A1A",
+    accentColor: "#1B2A4A", // Deep Navy
     eyebrow: "TICKET ROUTING",
     metrics: [
       { label: "Parameters", value: "350M" },
@@ -61,8 +61,8 @@ export const projects: Project[] = [
     previewBgColor: "#f8fafc",
     caseStudyUrl: "https://github.com/NazeeraAlthea/santara-mail-api",
     modelIndicator: "Time Series Anomaly",
-    titleColor: "#8B00FF", // Vivid Purple / Violet
-    accentColor: "#8B00FF", // Match about page purple
+    titleColor: "#1A1A1A",
+    accentColor: "#6B1F2A", // Deep Maroon
     eyebrow: "SENSOR ANOMALY",
     metrics: [
       { label: "Sensor Count", value: "10k+" },

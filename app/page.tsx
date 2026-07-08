@@ -1,17 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  type MotionValue,
-} from "framer-motion";
+import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ProjectSection } from "@/components/sections/ProjectSection";
 import { ProjectImageStrip, VideoPlayer } from "@/components/ui/ProjectImageStrip";
@@ -77,9 +70,6 @@ const CANDID_PHOTOS = [
   },
 ] as const;
 
-// Parallax range in px per layer (back → front = less → more movement)
-const PARALLAX_RANGE = [8, 16, 26] as const;
-
 // Box shadows — deeper for layers closer to viewer
 const LAYER_SHADOWS = [
   "0 4px 18px rgba(0,0,0,0.11)",
@@ -88,59 +78,114 @@ const LAYER_SHADOWS = [
 ] as const;
 
 // ─────────────────────────────────────────────────────────────
-// PhotoLayer — a single grayscale photo in the stack
+// PhotoLayer — a single draggable photo card
 // ─────────────────────────────────────────────────────────────
 
 interface PhotoLayerProps {
   photo: (typeof CANDID_PHOTOS)[number];
   index: number;
-  smoothX: MotionValue<number>;
-  smoothY: MotionValue<number>;
+  zIndex: number;
+  onPointerDown: () => void;
+  onDragStart: () => void;
+  hasDragged: boolean;
   accentColor: string;
 }
 
-function PhotoLayer({ photo, index, smoothX, smoothY, accentColor }: PhotoLayerProps) {
-  const range = PARALLAX_RANGE[index];
+function PhotoLayer({
+  photo,
+  index,
+  zIndex,
+  onPointerDown,
+  onDragStart,
+  hasDragged,
+  accentColor,
+}: PhotoLayerProps) {
   const isFront = index === CANDID_PHOTOS.length - 1;
-  const baseOffsetX = photo.offsetX;
-  const baseOffsetY = photo.offsetY;
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Combined: static spread offset + dynamic parallax from mouse
-  const x = useTransform(smoothX, [0, 1], [baseOffsetX - range / 2, baseOffsetX + range / 2]);
-  const y = useTransform(smoothY, [0, 1], [baseOffsetY - range / 2, baseOffsetY + range / 2]);
+  // Position calculation in the 680x580 container
+  const left = (680 - photo.width) / 2 + photo.offsetX;
+  const top = (580 - photo.height) / 2 + photo.offsetY;
+
+  // Local drag boundaries relative to the initial top/left position
+  const minX = -left;
+  const maxX = 680 - left - photo.width;
+  const minY = -top;
+  const maxY = 580 - top - photo.height;
+
+  // ── Periodic nudge ──────────────────────────────────────────────────────
+  const nudgeControls = useAnimationControls();
+
+  useEffect(() => {
+    if (!isFront || hasDragged) return;
+
+    const run = () => {
+      nudgeControls.start({
+        rotate: [photo.rotate, photo.rotate - 3, photo.rotate + 2, photo.rotate],
+        x:      [0, -5, 4, 0],
+        transition: { duration: 0.45, ease: "easeInOut" },
+      });
+    };
+
+    const id = setInterval(run, 5500);
+    return () => clearInterval(id);
+  }, [isFront, hasDragged, nudgeControls, photo.rotate]);
+
+  const isColored = isHovered || isDragging;
 
   return (
     <motion.div
       className={photo.layerClass}
+      animate={isFront ? nudgeControls : undefined}
+      drag
+      dragElastic={0.12}
+      dragConstraints={{
+        left: minX,
+        right: maxX,
+        top: minY,
+        bottom: maxY,
+      }}
+      whileDrag={{ scale: 1.04, cursor: "grabbing" }}
+      onPointerDown={onPointerDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart();
+        if (isFront) nudgeControls.stop();
+      }}
+      onDragEnd={() => setIsDragging(false)}
       style={{
         position: "absolute",
         width: photo.width,
         height: photo.height,
         rotate: photo.rotate,
-        zIndex: photo.z,
-        x,
-        y,
-        // All layers centered on the container midpoint; offsets above shift from center
-        top: "50%",
-        left: "50%",
-        translateX: "-50%",
-        translateY: "-50%",
+        zIndex,
+        left,
+        top,
         boxShadow: LAYER_SHADOWS[index],
-        opacity: 0, // GSAP brings these in on scroll-enter
+        opacity: 0,       // GSAP animates to 1 on scroll-enter
         borderRadius: 6,
         overflow: "hidden",
+        cursor: "grab",
+        touchAction: "none",
       }}
     >
-      {/* Grayscale photo */}
+      {/* Photo — grayscale at rest, full colour when hovered or dragged */}
       <img
         src={photo.src}
         alt={photo.alt}
         className="w-full h-full object-cover"
-        style={{ filter: "grayscale(100%)", display: "block" }}
+        style={{
+          filter: isColored ? "none" : "grayscale(100%)",
+          transition: "filter 0.2s ease",
+          display: "block",
+        }}
         draggable={false}
       />
 
-      {/* Accent tint overlay on hover — front photo only */}
+      {/* Subtle accent-colour tint on hover — front card only */}
       {isFront && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -150,67 +195,44 @@ function PhotoLayer({ photo, index, smoothX, smoothY, accentColor }: PhotoLayerP
           style={{ backgroundColor: accentColor }}
         />
       )}
-
-      {/* Caption — front photo only */}
-      {isFront && (
-        <div
-          className="absolute bottom-3 right-3 pointer-events-none select-none"
-          style={{
-            fontFamily: "var(--font-space-grotesk), sans-serif",
-            fontSize: "10px",
-            fontWeight: 500,
-            letterSpacing: "0.06em",
-            color: "rgba(255,255,255,0.88)",
-            background: "rgba(0,0,0,0.48)",
-            backdropFilter: "blur(4px)",
-            padding: "4px 8px",
-            borderRadius: 4,
-          }}
-        >
-          AI Engineer, Jakarta
-        </div>
-      )}
-
-      {/* Clickable link — front photo only */}
-      {isFront && (
-        <Link
-          href="/about"
-          className="absolute inset-0 z-10 cursor-pointer"
-          aria-label="Go to About page"
-        />
-      )}
     </motion.div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// PhotoStack — renders all 3 layers inside a fixed-size container
+// PhotoStack — manages drag-to-front z-order + nudge state
 // ─────────────────────────────────────────────────────────────
 
 interface PhotoStackProps {
-  smoothX: MotionValue<number>;
-  smoothY: MotionValue<number>;
   accentColor: string;
 }
 
-function PhotoStack({ smoothX, smoothY, accentColor }: PhotoStackProps) {
+function PhotoStack({ accentColor }: PhotoStackProps) {
+  const [zOrder, setZOrder] = useState<number[]>([0, 1, 2]);
+  const [hasDragged, setHasDragged] = useState(false);
+
+  const bringToFront = (index: number) => {
+    setZOrder((prev) => {
+      const next = prev.filter((i) => i !== index);
+      next.push(index);
+      return next;
+    });
+  };
+
   return (
-    /*
-     * .photo-stack-scaler applies responsive CSS transform:scale() breakpoints
-     * defined in globals.css. The inner container is sized for the base (1×) design:
-     *   - front card: 322×420px centered
-     *   - back card:  225×295px, +98px right, -70px up, 10deg
-     *   - mid card:   294×385px, -98px left,  +42px down, -9deg
-     * 680×580 comfortably contains all three with rotation bleed.
-     */
-    <div className="photo-stack-scaler" style={{ position: "relative", width: 680, height: 580 }}>
+    <div
+      className="photo-stack-scaler"
+      style={{ position: "relative", width: 680, height: 580 }}
+    >
       {CANDID_PHOTOS.map((photo, i) => (
         <PhotoLayer
           key={photo.src}
           photo={photo}
           index={i}
-          smoothX={smoothX}
-          smoothY={smoothY}
+          zIndex={zOrder.indexOf(i) + 1}
+          onPointerDown={() => bringToFront(i)}
+          onDragStart={() => setHasDragged(true)}
+          hasDragged={hasDragged}
           accentColor={accentColor}
         />
       ))}
@@ -230,36 +252,11 @@ interface OutroSectionProps {
 function OutroSection({ accentColor, bgTone }: OutroSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Raw mouse position within the section, normalised 0→1
-  const mouseX = useMotionValue(0.5);
-  const mouseY = useMotionValue(0.5);
-
-  // Spring-smoothed versions passed to PhotoStack
-  const smoothX = useSpring(mouseX, { stiffness: 60, damping: 18 });
-  const smoothY = useSpring(mouseY, { stiffness: 60, damping: 18 });
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
-      const rect = sectionRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      mouseX.set((e.clientX - rect.left) / rect.width);
-      mouseY.set((e.clientY - rect.top) / rect.height);
-    },
-    [mouseX, mouseY]
-  );
-
-  const handleMouseLeave = useCallback(() => {
-    mouseX.set(0.5);
-    mouseY.set(0.5);
-  }, [mouseX, mouseY]);
-
   return (
     <section
       ref={sectionRef}
       className="outro-section w-full h-screen portrait:h-auto portrait:min-h-screen relative flex items-center justify-center overflow-hidden"
       style={{ zIndex: 100, backgroundColor: bgTone }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
     >
       {/*
         Constrained inner container — max-width keeps both columns close together
@@ -270,28 +267,15 @@ function OutroSection({ accentColor, bgTone }: OutroSectionProps) {
         className="w-full flex flex-row portrait:flex-col items-center portrait:items-start gap-12 portrait:gap-0 portrait:py-20"
         style={{ maxWidth: "1100px", padding: "0 clamp(1.5rem, 5vw, 4rem)" }}
       >
-        {/* ── Left Column — Dots + Headline + CTA ── */}
+        {/* ── Left Column — Headline + CTA ── */}
         <div className="flex-shrink-0 flex flex-col justify-center portrait:w-full portrait:mb-12" style={{ width: "340px" }}>
-
-          {/* Progress dot indicator — 3 dots + arrow, no text label */}
-          <div className="outro-dots flex items-center gap-[7px] mb-7 opacity-0">
-            <span className="block w-2 h-2 rounded-full bg-[#1a1a1a]" style={{ opacity: 0.32 }} />
-            <span className="block w-2 h-2 rounded-full bg-[#1a1a1a]" style={{ opacity: 0.32 }} />
-            <span className="block w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-            <ArrowRight
-              className="w-3.5 h-3.5 ml-1.5 shrink-0"
-              style={{ color: "#1a1a1a", opacity: 0.5 }}
-              strokeWidth={2.5}
-            />
-          </div>
-
           {/* Headline + CTA */}
           <div className="outro-text opacity-0">
             <h2
               className="font-serif italic font-semibold leading-[1.15] text-[#1a1a1a] mb-8"
               style={{ fontSize: "clamp(2rem, 3vw, 2.5rem)", maxWidth: "270px" }}
             >
-              Meet the person behind it.
+              There's more behind this.
             </h2>
 
             <Link href="/about" className="no-underline inline-block">
@@ -306,9 +290,9 @@ function OutroSection({ accentColor, bgTone }: OutroSectionProps) {
           </div>
         </div>
 
-        {/* ── Right Column — Layered Photo Stack ── */}
+        {/* ── Right Column — Draggable Photo Stack ── */}
         <div className="flex-1 portrait:w-full flex items-center justify-center portrait:justify-start">
-          <PhotoStack smoothX={smoothX} smoothY={smoothY} accentColor={accentColor} />
+          <PhotoStack accentColor={accentColor} />
         </div>
       </div>
     </section>
@@ -443,13 +427,8 @@ export default function Home() {
         start: "top 80%",
         id: "outro-entrance-trigger",
         onEnter: () => {
-          // Dot indicator fades in first — draws attention immediately
-          gsap.fromTo(
-            ".outro-dots",
-            { opacity: 0, y: 15 },
-            { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
-          );
           // Headline + CTA
+
           gsap.fromTo(
             ".outro-text",
             { opacity: 0, y: 20 },
@@ -675,7 +654,7 @@ export default function Home() {
         }}
       >
         {/* Left Side: Fixed text panel */}
-        <div className="w-full sm:w-[35%] sm:max-w-[420px] pointer-events-auto flex flex-col justify-center">
+        <div className="w-full sm:w-[28%] sm:max-w-[340px] pointer-events-auto flex flex-col justify-center">
           <AnimatePresence mode="wait" initial={false}>
             {activeProjectIndex !== null && (
               <motion.div
@@ -695,7 +674,7 @@ export default function Home() {
         </div>
 
         {/* Right Side: Mockup Image/Video Strip */}
-        <div className="hidden sm:block sm:w-[62%] h-screen relative pointer-events-none">
+        <div className="hidden sm:block sm:w-[70%] h-screen relative pointer-events-none">
           <ProjectImageStrip activeIndex={activeProjectIndex} bgTone={activeBgTone} />
         </div>
       </div>
@@ -727,12 +706,12 @@ export default function Home() {
               <div className="h-[50svh] w-full flex items-center justify-center px-6 portrait-text-block">
                 <div className="flex flex-col items-center justify-center text-center">
                   <h2
-                    className="font-black leading-[1.15] tracking-wide transition-colors duration-500"
+                    className="font-bold leading-[1.1] tracking-tight transition-colors duration-500"
                     style={{
-                      fontFamily: "var(--font-bebas-neue), sans-serif",
-                      fontSize: "clamp(2.5rem, 10vw, 4rem)",
-                      color: project.titleColor || "#1A1A1A",
-                      marginBottom: "clamp(0.5rem, 1.5vw, 1rem)",
+                      fontFamily: "var(--font-playfair-display), serif",
+                      fontSize: "clamp(2rem, 7.5vw, 3.2rem)",
+                      color: project.accentColor,
+                      marginBottom: "clamp(1.25rem, 3.5vw, 2.25rem)",
                     }}
                   >
                     {project.name}
@@ -743,15 +722,17 @@ export default function Home() {
                       fontFamily: "var(--font-space-grotesk), sans-serif",
                       fontSize: "clamp(0.875rem, 3.5vw, 1rem)",
                       maxWidth: "280px",
+                      marginBottom: "clamp(1.5rem, 4vw, 2.5rem)",
                     }}
                   >
                     {project.description}
                   </p>
-                  <div className="flex mt-[20px]">
+                  <div className="flex mt-0">
                     <ScrollCTA
                       label="Open Case Study"
                       href={project.caseStudyUrl}
                       cursorLabel="VIEW"
+                      accentColor={project.accentColor}
                     />
                   </div>
                 </div>

@@ -10,6 +10,7 @@ interface ScrollCTAProps {
   /** data-cursor attribute value shown in custom cursor on hover */
   cursorLabel?: string;
   className?: string;
+  accentColor?: string;
 }
 
 /**
@@ -22,6 +23,7 @@ export function ScrollCTA({
   onClick,
   cursorLabel = "VIEW",
   className = "",
+  accentColor,
 }: ScrollCTAProps) {
   const isExternal = href?.startsWith("http://") || href?.startsWith("https://");
 
@@ -38,9 +40,11 @@ export function ScrollCTA({
         className="cta-arrow w-4 h-4 shrink-0"
         aria-hidden="true"
         strokeWidth={1.5}
+        style={accentColor ? { color: accentColor } : undefined}
       />
     </>
   );
+
 
   if (href) {
     return (
