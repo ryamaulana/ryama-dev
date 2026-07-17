@@ -33,7 +33,7 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full flex justify-center pointer-events-none">
       <div
-        className="max-w-7xl w-full flex justify-between items-center relative"
+        className="canvas-container w-full flex justify-between items-center relative"
         style={{
           paddingTop: "clamp(1.25rem, 4.5vh, 3.5rem)",
           paddingBottom: "clamp(0.75rem, 2.5vh, 2rem)",
@@ -44,8 +44,8 @@ export function Header() {
         {/* Left Side */}
         {isAbout ? (
           <Link
-            href="/projects"
-            className="pointer-events-auto font-sans font-semibold uppercase text-[10px] md:text-[11px] tracking-widest text-[#6b6b6b] hover:text-[#1a1a1a] transition-all duration-300 no-underline"
+            href="/"
+            className="pointer-events-auto font-inter font-semibold uppercase text-[10px] md:text-[11px] tracking-widest text-[#6b6b6b] hover:text-[#1a1a1a] transition-all duration-300 no-underline"
             data-cursor="BACK"
           >
             ← Portfolio
@@ -93,16 +93,16 @@ export function Header() {
           <nav className="pointer-events-auto flex items-center gap-6">
             <Link
               href="/about"
-              className={`transition-all duration-300 w-10 h-10 rounded-full border bg-white hover:border-[#ff5a36] hover:text-[#ff5a36] hover:scale-105 active:scale-95 flex items-center justify-center shadow-md hover:shadow-lg shrink-0 ${
+              className={`transition-all duration-300 w-10 h-10 rounded-full border bg-white hover:border-[#1a1a1a] hover:text-[#1a1a1a] hover:scale-105 active:scale-95 flex items-center justify-center shadow-md hover:shadow-lg shrink-0 ${
                 isAbout
-                  ? "text-[#ff5a36] border-[#ff5a36] ring-2 ring-[#ff5a36]/20"
+                  ? "text-[#1a1a1a] border-[#1a1a1a] ring-2 ring-[#1a1a1a]/10"
                   : "text-[#6b6b6b] border-stone-200"
               }`}
               style={{ textDecoration: "none" }}
               data-cursor="ABOUT"
               aria-label="About"
             >
-              <span className="font-bold text-[11px] tracking-[0.04em] font-sans leading-none select-none">
+              <span className="font-bold text-[11px] tracking-[0.04em] font-inter leading-none select-none">
                 AR
               </span>
             </Link>

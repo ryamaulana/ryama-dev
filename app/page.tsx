@@ -275,7 +275,7 @@ function OutroSection({ accentColor, bgTone }: OutroSectionProps) {
               className="font-serif italic font-semibold leading-[1.15] text-[#1a1a1a] mb-8"
               style={{ fontSize: "clamp(2rem, 3vw, 2.5rem)", maxWidth: "270px" }}
             >
-              There's more behind this.
+              There&apos;s more behind this.
             </h2>
 
             <Link href="/about" className="no-underline inline-block">
@@ -332,6 +332,28 @@ export default function Home() {
       const container = containerRef.current;
       if (!container) return;
 
+      // This effect runs once on every fresh mount of the home page — including
+      // client-side navigation back from another route (e.g. About → Home via
+      // the header). On that kind of transition, window.scrollY can still hold
+      // the previous page's scroll offset for a frame before Next.js's own
+      // scroll-reset runs, which lands *after* this layout effect. If the hero
+      // rect below gets measured while that stale offset is in effect,
+      // getBoundingClientRect() reports the wrong (often off-screen) position
+      // and the flying RYAMA element is pinned there until a later refresh
+      // corrects it — the "moves around / disappears" glitch. Forcing scroll to
+      // top here, before any measurement happens, removes that race entirely.
+      //
+      // activeProjectIndex is reset the same way and for the same reason: the
+      // hero-leave-trigger ScrollTrigger below fires onLeave/setActiveProjectIndex(0)
+      // immediately at creation if it reads the scroll position as already past
+      // the hero (which can happen mid-transition, before the scroll-reset above
+      // has taken effect). That stale call sets React state that nothing later
+      // undoes — GSAP cleanup only tears down GSAP objects, not state already
+      // set — so the fixed-position project panel stays stuck rendered on top
+      // of the hero even once scroll is correctly back at 0.
+      window.scrollTo(0, 0);
+      setActiveProjectIndex(null);
+
       // --- HERO FADE OUT (Global, both orientations) ---
       // Scrub the hero section's opacity from 1→0 as it scrolls away.
       // This ensures there is no visual overlap between hero content and the
@@ -353,46 +375,48 @@ export default function Home() {
       // the hero placeholder (large, centred), then scrolls its position and
       // font-size toward the header RYAMA link as the hero exits.
       //
-      // Both positions are measured via getBoundingClientRect() at setup time
-      // so the animation is accurate regardless of viewport size / clamped values.
+      // Both positions are measured via getBoundingClientRect(), but as
+      // *functions* rather than one-off values captured at setup time — with
+      // invalidateOnRefresh, GSAP re-invokes them on every ScrollTrigger.refresh()
+      // (which fires automatically on window resize, including browser zoom).
+      // Without this, the clamp()-based hero font-size / header position drift
+      // out of sync with the tween's cached numbers whenever the viewport changes,
+      // making the text jump around or land off-target (appearing to vanish).
+      let flyingRyamaCleanup: (() => void) | undefined;
       (() => {
         const flyingEl   = document.getElementById("flying-ryama");
         const heroAnchor = document.getElementById("hero-ryama-placeholder");
         const headerAnchor = document.getElementById("header-ryama-target");
         if (!flyingEl || !heroAnchor || !headerAnchor) return;
 
-        const heroRect   = heroAnchor.getBoundingClientRect();
-        const headerRect = headerAnchor.getBoundingClientRect();
-
-        const heroFontSize   = parseFloat(getComputedStyle(heroAnchor).fontSize);   // px
-        const headerFontSize = parseFloat(getComputedStyle(headerAnchor).fontSize); // px
-
-        // Place flying element exactly over the hero placeholder before making it visible
-        gsap.set(flyingEl, {
-          top:       heroRect.top,
-          left:      heroRect.left,
-          width:     heroRect.width,
-          height:    heroRect.height,
-          fontSize:  heroFontSize,
-          opacity:   1,
-          visibility: "visible",
-        });
+        gsap.set(flyingEl, { opacity: 1, visibility: "visible" });
 
         // Scrub: hero position (large) → header position (small)
-        gsap.to(flyingEl, {
-          top:      headerRect.top,
-          left:     headerRect.left,
-          width:    headerRect.width,
-          height:   headerRect.height,
-          fontSize: headerFontSize,
-          ease:     "none",
-          scrollTrigger: {
-            trigger: ".hero-section-wrapper",
-            start:   "top top",
-            end:     "bottom top",
-            scrub:   0.25,
+        const flyTween = gsap.fromTo(
+          flyingEl,
+          {
+            top:      () => heroAnchor.getBoundingClientRect().top,
+            left:     () => heroAnchor.getBoundingClientRect().left,
+            width:    () => heroAnchor.getBoundingClientRect().width,
+            height:   () => heroAnchor.getBoundingClientRect().height,
+            fontSize: () => parseFloat(getComputedStyle(heroAnchor).fontSize),
           },
-        });
+          {
+            top:      () => headerAnchor.getBoundingClientRect().top,
+            left:     () => headerAnchor.getBoundingClientRect().left,
+            width:    () => headerAnchor.getBoundingClientRect().width,
+            height:   () => headerAnchor.getBoundingClientRect().height,
+            fontSize: () => parseFloat(getComputedStyle(headerAnchor).fontSize),
+            ease:     "none",
+            scrollTrigger: {
+              trigger: ".hero-section-wrapper",
+              start:   "top top",
+              end:     "bottom top",
+              scrub:   0.25,
+              invalidateOnRefresh: true,
+            },
+          }
+        );
 
         // Handoff: when hero is 100% gone, fade out flying element and let
         // the real header RYAMA (opacity transition in Header.tsx) take over.
@@ -403,6 +427,32 @@ export default function Home() {
           onLeave:      () => gsap.set(flyingEl, { opacity: 0 }),
           onEnterBack:  () => gsap.set(flyingEl, { opacity: 1 }),
         });
+
+        // --- HARD PIN while still hero content ---
+        // The scrub tween above is intentionally eased (scrub: 0.25) so the
+        // hero → header journey feels smooth once the user actually starts
+        // scrolling. But that same easing means a viewport-size change (e.g.
+        // browser zoom) while still resting at progress 0 makes the element
+        // visibly glide to its corrected spot instead of just being there —
+        // RYAMA must never move while it's still hero content, full stop.
+        // So: whenever the trigger is at rest (progress === 0, i.e. nothing
+        // has scrolled yet), a resize snaps the element straight onto the
+        // live hero rect with gsap.set — no tween, no lag, no drift. Once the
+        // user has actually scrolled past the hero, RYAMA is no longer "hero
+        // content" and the eased scrub above is allowed to own its position.
+        const snapToHeroIfAtRest = () => {
+          const st = flyTween.scrollTrigger;
+          if (!st || st.progress !== 0) return;
+          gsap.set(flyingEl, {
+            top:      heroAnchor.getBoundingClientRect().top,
+            left:     heroAnchor.getBoundingClientRect().left,
+            width:    heroAnchor.getBoundingClientRect().width,
+            height:   heroAnchor.getBoundingClientRect().height,
+            fontSize: parseFloat(getComputedStyle(heroAnchor).fontSize),
+          });
+        };
+        window.addEventListener("resize", snapToHeroIfAtRest);
+        flyingRyamaCleanup = () => window.removeEventListener("resize", snapToHeroIfAtRest);
       })();
 
       // --- OUTRO COVER (Global) ---
@@ -585,6 +635,7 @@ export default function Home() {
 
       return () => {
         mm.revert();
+        flyingRyamaCleanup?.();
       };
     },
     { scope: containerRef }
@@ -598,7 +649,7 @@ export default function Home() {
   const activeAccentColor =
     activeProjectIndex !== null
       ? projects[activeProjectIndex % projects.length].accentColor
-      : "#ff5a36";
+      : "#1a1a1a";
 
   return (
     <div

@@ -29,7 +29,7 @@ export function ProjectSection({ project, index, isPortrait }: ProjectSectionPro
       <p
         className="text-stone-600 leading-relaxed font-normal max-w-[480px]"
         style={{
-          fontFamily: "var(--font-inter)",
+          fontFamily: "var(--font-space-grotesk)",
           fontSize: "clamp(0.875rem, 2.5vw, 1.125rem)",
           marginBottom: "clamp(1.25rem, 3.5vw, 2.25rem)",
         }}

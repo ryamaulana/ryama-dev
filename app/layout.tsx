@@ -50,9 +50,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${playfairDisplay.variable} ${spaceGrotesk.variable} ${inter.variable} ${bebasNeue.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#fafaf7] text-[#1a1a1a] relative overflow-x-hidden">
+      <body className="min-h-full flex flex-col bg-[#EEEDE9] text-[#1a1a1a] relative overflow-x-hidden">
         {/* Global UI Layer */}
         <Header />
         

@@ -107,7 +107,10 @@ export function ProjectOverlay({ activeIndex, onClose }: ProjectOverlayProps) {
                   </div>
                   {/* Active indicator */}
                   {i === activeIndex && (
-                    <span className="w-2 h-2 rounded-full bg-[#ff5a36] shrink-0 mb-1" />
+                    <span 
+                      className="w-2 h-2 rounded-full shrink-0 mb-1" 
+                      style={{ backgroundColor: project.accentColor }}
+                    />
                   )}
                 </div>
               </motion.div>

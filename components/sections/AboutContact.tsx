@@ -22,7 +22,7 @@ const TECH_STACK = [
 const LINKS = [
   { icon: GitFork, label: "GitHub", href: "https://github.com" },
   { icon: Link2, label: "LinkedIn", href: "https://linkedin.com/in/" },
-  { icon: Mail, label: "Email", href: "mailto:hello@ryama.dev" },
+  { icon: Mail, label: "Email", href: "mailto:ryamaulana2894@gmail.com" },
 ];
 
 export function AboutContact() {
@@ -67,7 +67,7 @@ export function AboutContact() {
           className="p-6 rounded-2xl border border-[#e5e4e0] bg-white/60 backdrop-blur-sm"
         >
           <p
-            className="text-[10px] tracking-[0.18em] uppercase text-[#ff5a36] mb-3 font-semibold font-sans"
+            className="text-[10px] tracking-[0.18em] uppercase text-[#1a1a1a] mb-3 font-semibold font-sans"
           >
             Research Focus
           </p>
@@ -131,7 +131,7 @@ export function AboutContact() {
                   </span>
                 </div>
                 <ArrowUpRight
-                  className="w-3.5 h-3.5 text-[#b0aea8] group-hover:text-[#ff5a36] transition-colors duration-200"
+                  className="w-3.5 h-3.5 text-[#b0aea8] group-hover:text-[#1a1a1a] transition-colors duration-200"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />

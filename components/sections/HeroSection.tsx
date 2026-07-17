@@ -134,7 +134,7 @@ export function HeroSection() {
             width: "100%",
           }}
         >
-          <AnimatePresence mode="sync">
+          <AnimatePresence mode="wait">
             <KineticWord key={activeWordIndex} word={currentWord} />
           </AnimatePresence>
         </div>

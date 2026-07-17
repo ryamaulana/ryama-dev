@@ -1,506 +1,148 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-import { AboutDotIndicator } from "@/components/ui/AboutDotIndicator";
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
-
-const SPECS = [
-  { label: "LOCATION", value: "Jakarta, Indonesia", hasDot: true, dotColor: "#ff5a36" },
-  { label: "DEGREE", value: "D4 Teknik Informatika", hasDot: false },
-  { label: "INSTITUTION", value: "Politeknik Negeri Jakarta", hasDot: false },
-  { label: "FOCUS AREA", value: "ML - Predictive Systems", hasDot: false },
-  { label: "COLLABORATION", value: "PT NTG / Exigen", hasDot: false },
-  { label: "STATUS", value: "Active", hasDot: true, dotColor: "#ff5a36" },
-];
-
-const TECH_CATEGORIES = [
-  {
-    title: "AI / MACHINE LEARNING",
-    tags: [
-      { name: "Python", dot: "#3776AB" },
-      { name: "scikit-learn", dot: "#F7931E" },
-      { name: "TensorFlow", dot: "#FF6F00" },
-      { name: "PaddleOCR", dot: "#00A3FF" },
-      { name: "Qwen2.5 - Ollama", dot: "#8B00FF" },
-      { name: "Random Forest", dot: "#2496ED" },
-      { name: "MLP", dot: "#EE4C2C" },
-      { name: "Pandas - NumPy", dot: "#FFC107" },
-    ],
-  },
-  {
-    title: "WEB & API",
-    tags: [
-      { name: "Node.js", dot: "#339933" },
-      { name: "Express", dot: "#000000" },
-      { name: "Laravel", dot: "#FF2D20" },
-      { name: "React", dot: "#61DAFB" },
-      { name: "Next.js", dot: "#000000" },
-      { name: "REST API", isDarkBadge: true },
-    ],
-  },
-  {
-    title: "DATA & INFRASTRUCTURE",
-    tags: [
-      { name: "PostgreSQL", dot: "#336791" },
-      { name: "MySQL", dot: "#00758F" },
-      { name: "Matplotlib - Seaborn", dot: "#3776AB" },
-      { name: "Docker", dot: "#2496ED" },
-      { name: "Git", dot: "#F05032" },
-    ],
-  },
-];
-
-const PHILOSOPHIES = [
-  {
-    num: "01",
-    title: "Local First",
-    desc: "Pipeline ML dan AI dijalankan secara lokal bila memungkinkan. Privasi, kecepatan, dan kontrol penuh ada di tangan tim.",
-  },
-  {
-    num: "02",
-    title: "Problem-Driven",
-    desc: "Tools dipilih berdasarkan masalah yang harus diselesaikan, bukan popularitasnya. Tren bukan kompas.",
-  },
-  {
-    num: "03",
-    title: "Research ↔ Product",
-    desc: "Riset akademik harus bisa diimplementasikan. Kolaborasi dengan industri adalah cara terbaik membuktikannya.",
-  },
-  {
-    num: "04",
-    title: "Predict, Don't React",
-    desc: "Sistem terbaik adalah yang memberitahu masalah sebelum masalah itu datang — bukan setelah kerusakan terjadi.",
-  },
-];
+import { PhilosophySection } from "@/components/sections/PhilosophySection";
 
 export default function AboutPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useGSAP(
-    () => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const mm = gsap.matchMedia();
-
-      mm.add("(orientation: landscape)", () => {
-        const sections = gsap.utils.toArray<HTMLElement>(".about-section-wrapper");
-
-        sections.forEach((section, i) => {
-          ScrollTrigger.create({
-            trigger: section,
-            scroller: container, // Sync with scroll-snap custom container
-            start: "top 50%",
-            end: "bottom 50%",
-            id: `about-trigger-landscape-${i}`,
-            onEnter: () => setActiveIndex(i),
-            onEnterBack: () => setActiveIndex(i),
-          });
-        });
-      });
-
-      mm.add("(orientation: portrait)", () => {
-        const sections = gsap.utils.toArray<HTMLElement>(".about-section-wrapper");
-
-        sections.forEach((section, i) => {
-          ScrollTrigger.create({
-            trigger: section,
-            start: "top 50%",
-            end: "bottom 50%",
-            id: `about-trigger-portrait-${i}`,
-            onEnter: () => setActiveIndex(i),
-            onEnterBack: () => setActiveIndex(i),
-          });
-        });
-      });
-
-      return () => {
-        mm.revert();
-      };
-    },
-    { scope: containerRef }
-  );
-
-  useEffect(() => {
-    // Refresh ScrollTrigger after a short delay on initial mount to allow layout settling
-    const timer = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 500);
-
-    const handleOrientationChange = () => {
-      setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 300);
-    };
-
-    window.addEventListener("orientationchange", handleOrientationChange);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("orientationchange", handleOrientationChange);
-    };
-  }, []);
-
-  const scrollToSection = (idx: number) => {
-    const el = document.getElementById(`about-section-${idx}`);
-    if (el) {
-      const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-      if (isPortrait) {
-        // Scroll the window/body on portrait
-        window.scrollTo({
-          top: el.offsetTop,
-          behavior: "smooth"
-        });
-      } else {
-        // Scroll the custom container on landscape
-        el.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  };
-
   return (
-    <div
-      ref={containerRef}
-      className="about-page-container w-full h-screen portrait:h-auto overflow-y-scroll portrait:overflow-y-visible snap-y snap-mandatory portrait:snap-none bg-[#FAFAF7] bg-grid-pattern relative scroll-smooth hide-scrollbar"
-    >
-      {/* ── Slide 1: Intro ── */}
-      <section
-        id="about-section-0"
-        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex flex-col justify-center items-center px-8 sm:px-24 text-center select-none"
-      >
-        <div className="max-w-2xl flex flex-col items-center gap-6">
-          <p className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-stone-400 font-sans font-medium">
-            Jakarta, Indonesia
+    <main className="w-full max-w-4xl mx-auto px-8 sm:px-16 py-20 min-h-screen bg-[#EEEDE9] flex flex-col gap-[var(--space-4xl)] md:gap-[var(--space-5xl)] lg:gap-[var(--space-6xl)]">
+      {/* ── Section 1: Pembuka ── */}
+      <section className="w-full pt-[var(--space-4xl)] md:pt-[var(--space-5xl)] lg:pt-[var(--space-6xl)] pb-8 flex flex-col items-start text-left">
+        <p className="text-[10px] tracking-[0.25em] uppercase text-stone-400 font-sans font-semibold mb-6">
+          Jakarta, Indonesia
+        </p>
+        <h1 className="max-w-4xl text-left font-normal leading-[1.1] tracking-tight">
+          <span className="font-sans font-bold text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">Saya </span>
+          <span className="font-serif italic text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">Muhammad </span>
+          <span className="font-sans font-black text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">Arya </span>
+          <span className="font-serif italic text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">Maulana</span>
+          <span className="font-sans font-medium text-4xl sm:text-6xl md:text-7xl text-stone-400">, </span>
+          <br className="hidden md:block" />
+          <span className="font-sans font-medium text-4xl sm:text-6xl md:text-7xl text-stone-400">seorang </span>
+          <span className="font-serif italic text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">AI Engineer </span>
+          <span className="font-sans font-bold text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">&amp; </span>
+          <span className="font-sans font-black text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">Fullstack </span>
+          <span className="font-serif italic text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">Developer</span>
+          <br className="hidden md:block" />
+          <span className="font-sans font-medium text-4xl sm:text-6xl md:text-7xl text-stone-400"> yang fokus pada </span>
+          <span className="font-serif italic text-4xl sm:text-6xl md:text-7xl text-[#1A1A1A]">sistem prediktif </span>
+          <span className="font-sans font-normal text-4xl sm:text-6xl md:text-7xl text-stone-400">berbasis data.</span>
+        </h1>
+      </section>
+
+      {/* ── Section 2: Cerita Personal ── */}
+      <section className="w-full max-w-3xl py-4">
+        <p className="text-stone-600 text-base sm:text-lg leading-relaxed font-sans">
+          Ketertarikan saya pada AI and sistem prediktif lahir dari rasa ingin tahu yang mendalam tentang bagaimana data masa lalu bisa digunakan untuk mencegah masalah di masa depan. Saya melihat teknologi bukan sekadar alat untuk membangun fitur, melainkan jembatan untuk mengeliminasi ketidakpastian. Di situlah letak keindahan predictive systems: mendeteksi tanda-tanda kerusakan sebelum sistem itu sendiri menyadari bahwa ia akan gagal.
+        </p>
+      </section>
+
+      {/* ── Section 3: Bukti Kolaborasi ── */}
+      <section className="w-full pt-[var(--space-4xl)] md:pt-[var(--space-5xl)] lg:pt-[var(--space-6xl)] pb-8 border-t border-border">
+        <p className="text-[10px] tracking-[0.25em] uppercase text-stone-400 font-sans font-bold mb-3">
+          Collaboration
+        </p>
+        <h2 className="font-serif italic font-bold text-3xl sm:text-4xl text-[#1A1A1A] mb-8">
+          Menjembatani Riset &amp; Industri Nyata
+        </h2>
+        <div className="max-w-3xl flex flex-col gap-6">
+          <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans">
+            Melalui kurikulum <strong>Project-Based Learning di Politeknik Negeri Jakarta (Sep 2023–Present)</strong>, saya dibekali untuk menyelesaikan tantangan bisnis riil sejak awal studi. Saya tidak memandang proyek akademik sebagai latihan main-main, melainkan sebagai kesempatan memecahkan masalah nyata milik klien yang sebenarnya.
           </p>
-
-          <h1 className="font-serif leading-[0.9] text-[#1a1a1a] flex flex-col items-center">
-            <span className="font-extrabold uppercase text-[clamp(44px,8vw,110px)] font-sans tracking-tight">
-              ABOUT
-            </span>
-            <span className="font-black italic uppercase text-[clamp(52px,10vw,130px)] text-[#ff5a36] -mt-2">
-              RYAMA
-            </span>
-          </h1>
-
-          <h2 className="text-[11px] sm:text-[12px] font-extrabold tracking-[0.25em] text-[#6b6b6b] font-sans uppercase">
-            AI ENGINEER &amp; FULLSTACK DEVELOPER
-          </h2>
-
-          <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans max-w-lg mt-2">
-            Membangun sistem yang memprediksi, mengotomatisasi, dan berkomunikasi — sehingga tim bisa fokus pada hal yang benar-benar penting.
+          <p className="text-stone-600 text-sm sm:text-base leading-relaxed font-sans">
+            Hal ini dibuktikan melalui kolaborasi saya dengan <strong>PT NTG</strong> dalam mendesain sistem <strong>Exigen Smart Maintenance</strong> untuk memprediksi sisa umur pakai mesin industri. Selain itu, kepemimpinan saya dalam proyek pengembangan platform asesmen wawancara cerdas <strong>Asah</strong> di bawah naungan <strong>Dicoding x Accenture</strong> berhasil dianugerahi penghargaan <strong>Best Capstone Project Award</strong> pada <strong>Januari 2026</strong> karena orisinalitasnya dalam mengikis bias seleksi.
           </p>
-
-          <button
-            onClick={() => scrollToSection(1)}
-            className="inline-flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#ff5a36] text-white font-bold tracking-widest uppercase text-[11px] transition-all duration-300 rounded-lg font-sans shadow-lg hover:shadow-[0_8px_30px_rgba(255,90,54,0.3)] hover:scale-[1.03] active:scale-[0.98] cursor-pointer mt-4"
-            style={{ padding: "16px 40px" }}
-          >
-            Read More →
-          </button>
         </div>
       </section>
 
-      {/* ── Slide 2: Who I Am ── */}
-      <section
-        id="about-section-1"
-        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
-      >
-        <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
-          {/* Left Side: Bio text */}
-          <div className="lg:col-span-5 flex flex-col justify-center text-left">
-            <p className="text-[10px] tracking-[0.2em] font-extrabold uppercase text-[#ff5a36] mb-3 font-sans">
-              WHO I AM
-            </p>
-            <h2 className="text-[clamp(32px,4.5vw,72px)] font-black uppercase leading-[0.9] text-[#ff5a36] font-sans tracking-tighter">
-              MUHAMMAD<br />
-              ARYA<br />
-              MAULANA
-            </h2>
-            <p className="text-stone-700 text-sm sm:text-[15px] leading-relaxed font-sans mt-6 mb-6">
-              Mahasiswa Teknik Informatika di Politeknik Negeri Jakarta. Saya hidup di persimpangan kecerdasan buatan dan rekayasa perangkat lunak — dari prediksi kegagalan mesin hingga pipeline pemrosesan dokumen lokal.
-            </p>
-            <a
-              href="https://github.com/nazeeraalthea"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#ff5a36] hover:text-[#e04524] tracking-widest uppercase transition-colors font-sans no-underline w-fit"
-            >
-              github.com/nazeeraalthea →
-            </a>
-          </div>
-
-          {/* Right Side: Profile Card */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end w-full">
-            <div
-              className="about-profile-card w-full max-w-[500px] bg-[#121212] text-white rounded-[24px] border border-stone-800/80 shadow-2xl flex flex-col p-6 sm:p-10"
-            >
-              <p className="text-[9px] tracking-[0.25em] text-stone-500 uppercase font-sans font-semibold mb-2">
-                DEVELOPER PROFILE - 2026
-              </p>
-              <h3 className="text-3xl font-extrabold tracking-wide uppercase text-white font-sans">
-                ARYA MAULANA
-              </h3>
-              <p className="text-[10px] tracking-[0.2em] text-stone-400 uppercase font-sans mt-1">
-                AI ENGINEER - FULLSTACK DEVELOPER
-              </p>
-
-              <div className="border-t border-stone-800/80 my-5" />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6" style={{ gap: "20px 24px" }}>
-                {SPECS.map((spec) => (
-                  <div key={spec.label} className="flex flex-col gap-1.5">
-                    <span className="text-[9px] tracking-wider text-stone-500 font-bold uppercase font-sans">
-                      {spec.label}
-                    </span>
-                    <span className="text-sm font-medium text-stone-200 font-sans flex items-center">
-                      {spec.hasDot && (
-                        <span
-                          className="w-2 h-2 rounded-full mr-2 shrink-0 animate-pulse"
-                          style={{ backgroundColor: spec.dotColor }}
-                        />
-                      )}
-                      {spec.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* ── Section 4: Filosofi Kerja ── */}
+      <section className="w-full pt-[var(--space-4xl)] md:pt-[var(--space-5xl)] lg:pt-[var(--space-6xl)] pb-8 border-t border-border">
+        <p className="text-[10px] tracking-[0.25em] uppercase text-stone-400 font-sans font-bold mb-3">
+          Philosophy
+        </p>
+        <h2 className="font-serif italic font-bold text-3xl sm:text-4xl text-[#1A1A1A] mb-8">
+          Prinsip Rekayasa Sistem
+        </h2>
+        <div className="w-full bg-[#f4f3ef] border border-border rounded-[24px] p-6 sm:p-8">
+          <PhilosophySection />
         </div>
       </section>
 
-      {/* ── Slide 3: Tech Stack ── */}
-      <section
-        id="about-section-2"
-        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
-      >
-        <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
-          {/* Left Side: Tag list */}
-          <div className="lg:col-span-7 flex flex-col gap-6 w-full order-2 lg:order-1">
-            {TECH_CATEGORIES.map((cat) => (
-              <div key={cat.title} className="flex flex-col gap-2.5">
-                <span className="text-[10px] tracking-widest text-stone-400 font-bold uppercase font-sans">
-                  {cat.title}
-                </span>
-                <div className="flex flex-wrap" style={{ gap: "14px 10px" }}>
-                  {cat.tags.map((tag) =>
-                    tag.isDarkBadge ? (
-                      <span
-                        key={tag.name}
-                        className="bg-black text-white rounded-full text-[11px] font-extrabold uppercase tracking-widest font-sans select-none shadow-sm px-4 py-2 sm:px-5 sm:py-3"
-                      >
-                        {tag.name}
-                      </span>
-                    ) : (
-                      <span
-                        key={tag.name}
-                        className="rounded-full border border-stone-200 text-stone-700 bg-white text-xs font-semibold font-sans tracking-wide inline-flex items-center gap-2 shadow-sm hover:shadow-md transition-all select-none px-4 py-2 sm:px-5 sm:py-3"
-                      >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: tag.dot }}
-                        />
-                        {tag.name}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Right Side: Header text */}
-          <div className="lg:col-span-5 flex flex-col justify-center text-left order-1 lg:order-2">
-            <p className="text-[10px] tracking-[0.2em] font-extrabold uppercase text-stone-400 mb-3 font-sans">
-              TECHNOLOGY
-            </p>
-            <h2 className="text-[clamp(42px,6.5vw,95px)] font-black uppercase leading-[0.9] text-[#0052FF] font-sans tracking-tighter">
-              TECH<br />
-              STACK
-            </h2>
-            <p className="text-stone-700 text-sm sm:text-[15px] leading-relaxed font-sans mt-6">
-              Tools dipilih berdasarkan masalah, bukan tren. ML pipeline lokal, API yang ringan, dan frontend yang jelas.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Slide 4: Education ── */}
-      <section
-        id="about-section-3"
-        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
-      >
-        <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
-          {/* Left Side: Education Text */}
-          <div className="lg:col-span-5 flex flex-col justify-center text-left">
-            <p className="text-[10px] tracking-[0.2em] font-extrabold uppercase text-stone-400 mb-3 font-sans">
-              EDUCATION
-            </p>
-            <h2 className="text-[clamp(38px,6vw,90px)] font-black uppercase leading-[0.9] text-[#00A86B] font-sans tracking-tighter">
-              POLTEK<br />
-              NEGERI<br />
-              JAKARTA
-            </h2>
-            <p className="text-stone-700 text-sm sm:text-[15px] leading-relaxed font-sans mt-6 mb-6">
-              Jurusan Teknik Informatika. Membangun fondasi antara teori dan implementasi industri nyata.
-            </p>
-            <a
-              href="https://pnj.ac.id"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00A86B] hover:text-[#008f5a] tracking-widest uppercase transition-colors font-sans no-underline w-fit"
-            >
-              pnj.ac.id →
-            </a>
-          </div>
-
-          {/* Right Side: Education Card */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end w-full">
-            <div
-              className="about-education-card w-full max-w-[550px] bg-[#f4f3ef] border border-[#e5e4e0] rounded-[24px] shadow-xl relative flex flex-col p-6 sm:p-10"
-            >
-              {/* Badge */}
-              <div className="bg-[#00A86B] text-white text-[9px] tracking-widest font-bold px-3.5 py-1.5 rounded-full uppercase inline-block w-fit mb-5 font-sans">
-                ● ACTIVE STUDENT
-              </div>
-              <h3 className="text-lg sm:text-xl font-extrabold tracking-wide uppercase text-stone-900 font-sans">
-                POLITEKNIK NEGERI JAKARTA
-              </h3>
-              <p className="text-[10px] tracking-[0.15em] text-stone-500 uppercase font-sans mt-1 mb-5">
-                D4 Teknik Informatika - Jurusan Teknik Informatika. Depok, Jawa Barat
-              </p>
-
-              <ul className="flex flex-col gap-4 list-none p-0 m-0">
-                <li className="flex gap-3 text-stone-700 text-xs sm:text-[13px] leading-relaxed font-sans align-top">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00A86B] shrink-0 mt-1.5" />
-                  <span>
-                    Riset akademik komparatif: <strong>Random Forest vs. Multi-Layer Perceptron</strong> untuk prediksi Remaining Useful Life (RUL) pada predictive maintenance fasilitas gedung.
-                  </span>
-                </li>
-                <li className="flex gap-3 text-stone-700 text-xs sm:text-[13px] leading-relaxed font-sans align-top">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00A86B] shrink-0 mt-1.5" />
-                  <span>
-                    Kolaborasi industri dengan <strong>PT NTG</strong> dalam framework <strong>Exigen Smart Maintenance</strong> — menjembatani riset kampus ke implementasi produksi nyata.
-                  </span>
-                </li>
-                <li className="flex gap-3 text-stone-700 text-xs sm:text-[13px] leading-relaxed font-sans align-top">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00A86B] shrink-0 mt-1.5" />
-                  <span>
-                    Pengembangan letter reader lokal menggunakan <strong>PaddleOCR + Qwen2.5 via Ollama</strong> — pipeline pemrosesan surat yang sepenuhnya berjalan offline tanpa cloud API.
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Slide 5: Philosophy ── */}
-      <section
-        id="about-section-4"
-        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex items-center justify-center px-8 sm:px-24 lg:px-32"
-      >
-        <div className="max-w-[1400px] w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
-          {/* Left Side: Philosophy Text */}
-          <div className="lg:col-span-5 flex flex-col justify-center text-left">
-            <p className="text-[10px] tracking-[0.2em] font-extrabold uppercase text-stone-400 mb-3 font-sans">
-              PHILOSOPHY
-            </p>
-            <h2 className="text-[clamp(42px,6.5vw,95px)] font-black uppercase leading-[0.9] text-[#8B00FF] font-sans tracking-tighter">
-              HOW I<br />
-              WORK
-            </h2>
-            <p className="text-stone-700 text-sm sm:text-[15px] leading-relaxed font-sans mt-6">
-              Prinsip yang memandu setiap keputusan teknis — dari arsitektur sistem hingga satu baris kode.
-            </p>
-          </div>
-
-          {/* Right Side: 2x2 grid of Cards */}
-          <div className="lg:col-span-7 flex justify-center lg:justify-end w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[550px]">
-              {PHILOSOPHIES.map((p) => (
-                <div
-                  key={p.num}
-                  className="about-philosophy-card bg-[#f4f3ef] border border-[#e5e4e0] rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-2 select-none p-5 sm:p-7"
+      {/* ── Section 5: Tech Stack Tags ── */}
+      <section className="w-full pt-[var(--space-4xl)] md:pt-[var(--space-5xl)] lg:pt-[var(--space-6xl)] pb-8 border-t border-border">
+        <p className="text-[10px] tracking-[0.25em] uppercase text-stone-400 font-sans font-bold mb-3">
+          Technologies
+        </p>
+        <h2 className="font-serif italic text-2xl text-[#1A1A1A] mb-8">
+          Tech Stack
+        </h2>
+        <div className="flex flex-col sm:flex-row gap-12">
+          <div className="flex-1">
+            <h3 className="font-serif italic text-base text-stone-500 mb-4">AI / ML</h3>
+            <div className="flex flex-wrap gap-2">
+              {["Python", "TensorFlow", "Keras", "MLflow"].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-4 py-2 text-xs font-sans text-stone-700 border border-[#BEBDB9] rounded-full select-none"
                 >
-                  <span className="text-[16px] font-black tracking-wide text-[#8B00FF] font-sans">
-                    {p.num}
-                  </span>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-stone-900 font-sans">
-                    {p.title}
-                  </h3>
-                  <p className="text-[11px] leading-relaxed text-stone-600 font-sans">
-                    {p.desc}
-                  </p>
-                </div>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-serif italic text-base text-stone-500 mb-4">Web &amp; API</h3>
+            <div className="flex flex-wrap gap-2">
+              {["Next.js", "React", "Laravel", "Supabase", "RESTful API"].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-4 py-2 text-xs font-sans text-stone-700 border border-[#BEBDB9] rounded-full select-none"
+                >
+                  {tag}
+                </span>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Slide 6: Get in Touch ── */}
-      <section
-        id="about-section-5"
-        className="about-section-wrapper snap-start portrait:snap-align-none w-full h-screen portrait:h-auto portrait:min-h-screen portrait:py-20 flex flex-col justify-center items-center px-8 sm:px-24 text-center select-none"
-      >
-        <div className="max-w-3xl flex flex-col items-center gap-6">
-          <p className="text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-stone-400 font-sans font-medium">
-            {"LET'S BUILD SOMETHING"}
-          </p>
+      {/* ── Section 6: Kontak/Penutup ── */}
+      <section className="w-full pt-[var(--space-4xl)] md:pt-[var(--space-5xl)] lg:pt-[var(--space-6xl)] pb-24 border-t border-border">
+        <h2 className="font-serif italic font-bold text-4xl sm:text-5xl md:text-6xl text-[#1A1A1A] mb-10 leading-tight">
+          Mari Mulai<br />Kolaborasi Baru.
+        </h2>
+        
+        <div className="flex items-center gap-2.5 mb-10">
+          <span className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
+          <span className="text-xs font-sans font-bold uppercase tracking-wider text-stone-600">
+            Available for new projects
+          </span>
+        </div>
 
-          <h2 className="font-serif leading-[0.9] text-[#1a1a1a] font-extrabold uppercase text-[clamp(44px,8vw,110px)] font-sans tracking-tight mb-4">
-            GET IN<br />
-            TOUCH
-          </h2>
-
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-6 w-full max-w-xs sm:max-w-none px-4">
-            {/* Button 1: GitHub */}
-            <a
-              href="https://github.com/nazeeraalthea"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full sm:w-auto items-center justify-center gap-2 bg-[#1a1a1a] hover:bg-[#ff5a36] text-white font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-[#1a1a1a] hover:border-[#ff5a36] rounded-lg font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
-              style={{ padding: "16px 32px" }}
-            >
-              <span>↗ GITHUB</span>
-            </a>
-
-            {/* Button 2: LinkedIn */}
-            <a
-              href="https://linkedin.com/in/muhammad-arya-maulana/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full sm:w-auto items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-900 hover:text-[#ff5a36] font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-stone-200 hover:border-[#ff5a36] rounded-lg font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
-              style={{ padding: "16px 32px" }}
-            >
-              <span>↗ LINKEDIN</span>
-            </a>
-
-            {/* Button 3: Instagram */}
-            <a
-              href="https://instagram.com/ay.rya"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex w-full sm:w-auto items-center justify-center gap-2 bg-white hover:bg-stone-50 text-stone-900 hover:text-[#ff5a36] font-bold tracking-widest uppercase text-[10px] sm:text-[11px] transition-all duration-300 border border-stone-200 hover:border-[#ff5a36] rounded-lg font-sans no-underline cursor-pointer hover:scale-[1.03] active:scale-[0.98]"
-              style={{ padding: "16px 32px" }}
-            >
-              <span>↗ INSTAGRAM</span>
-            </a>
-          </div>
+        <div className="flex flex-col gap-4 items-start">
+          <a
+            href="mailto:ryamaulana2894@gmail.com"
+            className="font-sans text-base font-bold text-[#1A1A1A] hover:text-stone-500 transition-colors underline decoration-solid underline-offset-4"
+          >
+            ryamaulana2894@gmail.com
+          </a>
+          <a
+            href="https://linkedin.com/in/muhammad-arya-maulana/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-sans text-base font-bold text-[#1A1A1A] hover:text-stone-500 transition-colors underline decoration-solid underline-offset-4"
+          >
+            linkedin.com/in/muhammad-arya-maulana
+          </a>
+          <a
+            href="https://github.com/ryamaulana"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-sans text-base font-bold text-[#1A1A1A] hover:text-stone-500 transition-colors underline decoration-solid underline-offset-4"
+          >
+            github.com/ryamaulana
+          </a>
         </div>
       </section>
-
-      {/* ── Slide Indicator Navigation ── */}
-      <AboutDotIndicator
-        activeIndex={activeIndex}
-        onNavigate={(idx) => scrollToSection(idx)}
-      />
-    </div>
+    </main>
   );
 }

@@ -8,17 +8,17 @@
 
 @theme {
   /* --- Colors --- */
-  --color-bg: #fafaf7;
+  --color-bg: #EEEDE9;
   /* Warm off-white */
   --color-text: #1a1a1a;
   /* Near-black */
   --color-text-muted: #6b6b6b;
   /* Secondary text */
-  --color-accent: #ff5a36;
-  /* Coral — single accent */
-  --color-accent-light: #fff0ed;
+  --color-accent: #1a1a1a;
+  /* Charcoal accent */
+  --color-accent-light: #f3f3f0;
   /* Accent tint for subtle bgs */
-  --color-border: #e5e4e0;
+  --color-border: #D3D1CB;
   /* Warm neutral border */
   --color-surface: #ffffff;
   /* Card surface */
@@ -26,6 +26,7 @@
   /* --- Fonts (set by next/font CSS vars in layout) --- */
   --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair-display), ui-serif, Georgia, serif;
+  --font-inter: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* --- Spacing --- */
   --space-xs: 0.25rem;
@@ -35,6 +36,9 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  --space-5xl: 8rem;
+  --space-6xl: 10rem;
 
   /* --- Shadows --- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -112,6 +116,10 @@ body {
   font-family: var(--font-space-grotesk), sans-serif;
 }
 
+.font-inter {
+  font-family: var(--font-inter), sans-serif;
+}
+
 /* ============================================================
    SCROLLBAR HIDE
    ============================================================ */
@@ -143,9 +151,10 @@ body {
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-inter);
-  font-size: 1.125rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--color-text);
   text-decoration: none;
   position: relative;
@@ -220,6 +229,28 @@ body {
    ============================================================ */
 .card-3d-wrapper {
   transform: rotateX(12deg) rotateY(-26deg) rotateZ(5deg) skewX(-4deg);
+}
+
+/* ============================================================
+   FLUID CANVAS CONTAINER
+   ============================================================ */
+.canvas-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: min(92vw, 1200px);
+}
+
+@media (min-width: 1280px) {
+  .canvas-container {
+    max-width: min(90vw, 1600px);
+  }
+}
+
+@media (min-width: 1536px) {
+  .canvas-container {
+    max-width: min(88vw, 1920px);
+  }
 }
 
 /* ============================================================
