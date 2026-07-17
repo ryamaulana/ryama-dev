@@ -40,7 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/data
+/data/*
+!/data/case-studies.ts
 .agent
 .claude
 # *.webm
